@@ -1,0 +1,86 @@
+{
+  "data": [
+    {
+      "title": "Модуль 1: Что-то умное про налог",
+      "lessons": [
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Тест",
+          "duration": "",
+          "imageSrc": "/coursePlaceholder.png",
+          "locked": true
+        }
+      ]
+    },
+    {
+      "title": "Модуль 2: Что-то умное про налог",
+      "lessons": [
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Название",
+          "duration": "15 минут",
+          "imageSrc": "/coursePlaceholder.png",
+          "completed": true
+        },
+        {
+          "title": "Тест",
+          "duration": "",
+          "imageSrc": "/coursePlaceholder.png",
+          "locked": true
+        }
+      ]
+    }
+  ]
+}

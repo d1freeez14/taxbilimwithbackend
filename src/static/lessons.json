@@ -1,0 +1,59 @@
+[
+  {
+    "id": 102,
+    "moduleNumber": 1,
+    "moduleTitle": "Модуль 1: Налоговое планирование",
+    "lessonNumber": 4,
+    "lessonTitle": "Название урока",
+    "videoSrc": "/courseVideo.mp4",
+    "description": "Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum integer in...",
+    "materials": [
+      {
+        "name": "Налоговые консультации.pdf",
+        "src": "/materials/tax-consultations.pdf"
+      },
+      {
+        "name": "Примеры расчётов.xlsx",
+        "src": "/materials/calculations.xlsx"
+      }
+    ]
+  },
+  {
+    "id": 103,
+    "moduleNumber": 1,
+    "moduleTitle": "Модуль 1: Налоговое планирование",
+    "lessonNumber": 4,
+    "lessonTitle": "Название урока",
+    "videoSrc": "/courseVideo.mp4",
+    "description": "Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum integer in...",
+    "materials": [
+      {
+        "name": "Налоговые консультации.pdf",
+        "src": "/materials/tax-consultations.pdf"
+      },
+      {
+        "name": "Примеры расчётов.xlsx",
+        "src": "/materials/calculations.xlsx"
+      }
+    ]
+  },
+  {
+    "id": 104,
+    "moduleNumber": 1,
+    "moduleTitle": "Модуль 1: Налоговое планирование",
+    "lessonNumber": 4,
+    "lessonTitle": "Название урока",
+    "videoSrc": "/courseVideo.mp4",
+    "description": "Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum integer in...",
+    "materials": [
+      {
+        "name": "Налоговые консультации.pdf",
+        "src": "/materials/tax-consultations.pdf"
+      },
+      {
+        "name": "Примеры расчётов.xlsx",
+        "src": "/materials/calculations.xlsx"
+      }
+    ]
+  }
+]

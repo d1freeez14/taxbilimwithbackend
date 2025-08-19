@@ -1,0 +1,134 @@
+[
+  {
+    "id": 1,
+    "bg": "white",
+    "isFavourite": false,
+    "isInCoursesPage": false,
+    "imageSrc": "/coursePlaceholder.png",
+    "title": "Name 1",
+    "author": {
+      "name": "Лана Б.",
+      "avatarSrc": "/avatars.png"
+    },
+    "price": "25 990 ₸",
+    "usersCount": 500,
+    "likesCount": 127,
+    "description": "Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum integer in...",
+    "features": [
+      "5 Модулей",
+      "78 видеоуроков",
+      "7 статей",
+      "10 ресурсов для скачивания",
+      "Полный пожизненный доступ",
+      "Сертификат об окончании"
+    ],
+    "whatYouLearn": [
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec."
+    ],
+    "modules": [
+      {
+        "title": "Модуль 1: Что-то умное про налог",
+        "videoCount": 15,
+        "tasksCount": 3,
+        "weeksCount": 2
+      },
+      {
+        "title": "Модуль 2: Что-то умное про налог",
+        "videoCount": 15,
+        "tasksCount": 3,
+        "weeksCount": 2
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "bg": "white",
+    "isFavourite": false,
+    "isInCoursesPage": false,
+    "imageSrc": "/coursePlaceholder.png",
+    "title": "Name 2",
+    "author": {
+      "name": "Лана Б.",
+      "avatarSrc": "/avatars.png"
+    },
+    "price": "25 990 ₸",
+    "usersCount": 500,
+    "likesCount": 127,
+    "description": "Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum integer in...",
+    "features": [
+      "5 Модулей",
+      "78 видеоуроков",
+      "7 статей",
+      "10 ресурсов для скачивания",
+      "Полный пожизненный доступ",
+      "Сертификат об окончании"
+    ],
+    "whatYouLearn": [
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec."
+    ],
+    "modules": [
+      {
+        "title": "Модуль 1: Что-то умное про налог",
+        "videoCount": 15,
+        "tasksCount": 3,
+        "weeksCount": 2
+      },
+      {
+        "title": "Модуль 2: Что-то умное про налог",
+        "videoCount": 15,
+        "tasksCount": 3,
+        "weeksCount": 2
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "bg": "white",
+    "isFavourite": false,
+    "isInCoursesPage": false,
+    "imageSrc": "/coursePlaceholder.png",
+    "title": "Name 3",
+    "author": {
+      "name": "Лана Б.",
+      "avatarSrc": "/avatars.png"
+    },
+    "price": "25 990 ₸",
+    "usersCount": 500,
+    "likesCount": 127,
+    "description": "Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum integer in...",
+    "features": [
+      "5 Модулей",
+      "78 видеоуроков",
+      "7 статей",
+      "10 ресурсов для скачивания",
+      "Полный пожизненный доступ",
+      "Сертификат об окончании"
+    ],
+    "whatYouLearn": [
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec.",
+      "Lorem ipsum dolor sit amet consectetur. Nec."
+    ],
+    "modules": [
+      {
+        "title": "Модуль 1: Что-то умное про налог",
+        "videoCount": 15,
+        "tasksCount": 3,
+        "weeksCount": 2
+      },
+      {
+        "title": "Модуль 2: Что-то умное про налог",
+        "videoCount": 15,
+        "tasksCount": 3,
+        "weeksCount": 2
+      }
+    ]
+  }
+]
