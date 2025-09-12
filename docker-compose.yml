@@ -48,7 +48,7 @@ services:
     build: .
     container_name: taxbilim_frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:5000
+      NEXT_PUBLIC_API_URL: http://localhost:5001
       NODE_ENV: development
     ports:
       - "3000:3000"
@@ -85,4 +85,4 @@ volumes:
 
 networks:
   taxbilim_network:
-    driver: bridge 
+    driver: bridge

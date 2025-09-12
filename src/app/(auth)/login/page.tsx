@@ -4,6 +4,9 @@ import Image from "next/image";
 import {useForm} from "react-hook-form";
 import {useState} from "react";
 import Link from "next/link";
+import {useSession} from "@/lib/useSession";
+import {AuthService} from "@/services/auth";
+import {useRouter} from "next/navigation";
 
 type FormData = {
   email: string
@@ -11,35 +14,24 @@ type FormData = {
 }
 
 const LoginPage = () => {
-
+  const router = useRouter();
   const {register, handleSubmit, formState: {errors, isSubmitting}} = useForm<FormData>()
   const [showPassword, setShowPassword] = useState(false)
+  const {saveSession} = useSession();
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      const result = await AuthService.login(data.email, data.password);
+
+      saveSession({
+        token: result.token,
+        user: result.user,
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        // Store the token in localStorage
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
-      } else {
-        alert(result.message || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Login failed. Please try again.');
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      alert(error.message || "Login failed. Please try again.");
     }
   }
   return (

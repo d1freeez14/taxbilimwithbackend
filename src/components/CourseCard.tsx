@@ -10,25 +10,25 @@ interface CourseCardProps {
   isFavourite?: boolean;
   isInCoursesPage?: boolean;
   course: Course;
-  onFavoriteToggle?: (courseId: number, isFavorite: boolean) => void;
+  // onFavoriteToggle?: (courseId: number, isFavorite: boolean) => void;
 }
 
-const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false, course, onFavoriteToggle}: CourseCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(course.isFavourite || isFavourite);
+const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false, course,}: CourseCardProps) => {
+  const [isFavorite, setIsFavorite] = useState(course.is_favorite || isFavourite);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isLoading) return;
-    
+
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in to add courses to favorites');
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const method = isFavorite ? 'DELETE' : 'POST';
@@ -41,7 +41,7 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
 
       if (response.ok) {
         setIsFavorite(!isFavorite);
-        onFavoriteToggle?.(course.id, !isFavorite);
+        // onFavoriteToggle?.(course.id, !isFavorite);
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -51,10 +51,10 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
   };
 
   return (
-    <Link href={`/courses/${course.id}`} className={'flex flex-col p-5 rounded-[1rem] gap-6 items-center'} style={{backgroundColor: bg}}>
+    <Link href={`/dashboard/courses/${course.id}`} className={'flex flex-col p-5 rounded-[1rem] gap-6 items-center'} style={{backgroundColor: bg}}>
       <div className="relative w-full aspect-video rounded-[0.5rem] overflow-hidden">
         <Image
-          src={course.imageSrc} alt="" fill className={"object-cover"}/>
+          src={course.image_src} alt="" fill className={"object-cover"}/>
         {course.is_sales_leader && (
           <div
             className={'flex bg-white items-center border border-[#F2C117] rounded-[0.5rem] absolute bottom-2.5 left-2.5 px-2.5 py-1.5'}>
@@ -63,7 +63,7 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
           </div>
         )}
         <div className={'absolute top-2.5 right-2.5'}>
-          <button 
+          <button
             onClick={handleFavoriteToggle}
             disabled={isLoading}
             className="focus:outline-none"
@@ -81,8 +81,8 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
         <div className={'flex items-center justify-between gap-4'}>
           {/*AUTHOR*/}
           <div className={'flex items-center gap-3'}>
-            <Image src={course.author.avatarSrc || '/avatars.png'} alt={''} width={32} height={32} className={'rounded-full'}/>
-            <p className={'text-[1rem] text-black font-medium'}>{course.author.name}</p>
+            <Image src={course.author_avatar || '/avatars.png'} alt={''} width={32} height={32} className={'rounded-full'}/>
+            <p className={'text-[1rem] text-black font-medium'}>{course.author_name}</p>
           </div>
 
           {isInCoursesPage && course.is_recorded && (
@@ -106,11 +106,11 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
           <div className={'flex items-center gap-1'}>
             <div className={'flex items-center gap-1'}>
               <Icon icon={'solar:user-outline'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
-              <p className={'text-[#676E76] text-[14px]'}>{course.usersCount}</p>
+              <p className={'text-[#676E76] text-[14px]'}>{course.enrollment_count}</p>
             </div>
             <div className={'flex items-center gap-1'}>
               <Icon icon={'iconamoon:like'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
-              <p className={'text-[#676E76] text-[14px]'}>({course.likesCount})</p>
+              <p className={'text-[#676E76] text-[14px]'}>({course.review_count})</p>
             </div>
           </div>
         </div>

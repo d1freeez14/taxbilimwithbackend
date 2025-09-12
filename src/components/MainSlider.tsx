@@ -36,7 +36,7 @@ const MainSlider = () => {
         <button className={'bg-white px-4 py-2 flex items-center gap-2 rounded-[0.5rem]'}>
           <p className={'text-black text-[0.875rem] font-medium'}>Записаться на курс</p>
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18" fill="none">
-            <path fill-rule="evenodd" clipRule="evenodd"
+            <path fillRule="evenodd" clipRule="evenodd"
                   d="M7.14863 13.1892C6.90604 12.9952 6.86671 12.6412 7.06078 12.3986L9.77967 8.99998L7.06078 5.60137C6.86671 5.35878 6.90604 5.00481 7.14863 4.81074C7.39121 4.61667 7.74519 4.656 7.93926 4.89859L10.9393 8.64859C11.1036 8.85402 11.1036 9.14593 10.9393 9.35137L7.93926 13.1014C7.74519 13.344 7.39121 13.3833 7.14863 13.1892Z"
                   fill="black"/>
           </svg>

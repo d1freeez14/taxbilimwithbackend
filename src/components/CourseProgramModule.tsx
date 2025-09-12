@@ -1,19 +1,11 @@
 'use client'
-
-
 import {Icon} from "@iconify/react";
 import {useState} from "react";
+import {CourseModule} from "@/types/course";
 
-interface CourseProgramModuleData {
-  title: string
-  lessons: number
-  tasks: number
-  weeks: number
-  bullets: string[]
-}
 
 interface CourseProgramModuleProps {
-  data: CourseProgramModuleData
+  data: CourseModule;
 }
 
 const CourseProgramModule = ({data}: CourseProgramModuleProps) => {
@@ -34,13 +26,14 @@ const CourseProgramModule = ({data}: CourseProgramModuleProps) => {
       </button>
 
       <p className="mt-2 text-sm text-gray-500">
-        {data.lessons} видеоуроков, {data.tasks} задания, {data.weeks} недели
+        {data.lessons.length} видеоуроков,
+        {/*{data.tasks} задания, {data.weeks} недели*/}
       </p>
 
       {open && (
         <ul className="mt-4 list-disc list-inside space-y-2 text-gray-700">
-          {data.bullets.map((text, i) => (
-            <li key={i}>{text}</li>
+          {data.lessons.map((lesson) => (
+            <li key={lesson.id}>{lesson.title}</li>
           ))}
         </ul>
       )}

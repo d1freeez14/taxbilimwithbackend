@@ -16,7 +16,7 @@ const CertificateCard = ({certificate}:CertificateCardProps) => {
         <div className={'flex items-center justify-between gap-2'}>
           <div className={'flex items-center gap-3'}>
             <Image src={'/avatars.png'} alt={''} width={32} height={32} className={'rounded-full'}/>
-            <p className={'text-[1rem] text-black font-medium'}>Author Name</p>
+            <p className={'text-[1rem] text-black font-medium'}>Лана Б.</p>
           </div>
           <div className={'flex items-center gap-1 bg-[#F6F7F9] px-2 py-1 rounded-[1rem]'}>
             <Icon icon={'heroicons:document-check-solid'} className={'text-black w-[18px] h-[18px]'}/>

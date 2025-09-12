@@ -5,6 +5,9 @@ import {useForm} from 'react-hook-form'
 import {Icon} from '@iconify/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import {useSession} from "@/lib/useSession";
+import {useRouter} from "next/navigation";
+import {AuthService} from "@/services/auth";
 
 type FormData = {
   firstName: string
@@ -22,36 +25,31 @@ const RegisterPage = () => {
     mode: 'onTouched'
   })
   const [showPassword, setShowPassword] = useState(false)
+  const {saveSession} = useSession();
+
+  const router = useRouter();
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: `${data.firstName} ${data.lastName}`,
-          email: data.email,
-          password: data.password,
-        }),
+      const session = await AuthService.register(
+        `${data.firstName} ${data.lastName}`.trim(),
+        data.email,
+        data.password
+      );
+
+      // если нужны зеркала в localStorage — оставь:
+      // localStorage.setItem('token', session.token);
+      // localStorage.setItem('user', JSON.stringify(session.user));
+
+      saveSession({
+        token: session.token,
+        user: session.user,
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        // Store the token in localStorage
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
-      } else {
-        alert(result.message || 'Registration failed');
-      }
-    } catch (error) {
+      router.push('/dashboard');
+    } catch (error: any) {
       console.error('Registration error:', error);
-      alert('Registration failed. Please try again.');
+      alert(error.message || 'Registration failed. Please try again.');
     }
   }
 

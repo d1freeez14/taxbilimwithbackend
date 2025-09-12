@@ -1,0 +1,142 @@
+'use client'
+import {Fragment, useState} from "react";
+import {Icon} from "@iconify/react";
+import Link from "next/link";
+import Image from "next/image";
+import ChatComponent from "@/components/Chat";
+import {useQuery} from "@tanstack/react-query";
+import {CourseService} from "@/services/course";
+import {useParams} from "next/navigation";
+import {useSession} from "@/lib/useSession";
+import {CourseModule} from "@/types/course";
+
+const ModuleLayout = ({children}: { children: React.ReactNode }) => {
+  const {getSession} = useSession();
+  const session = getSession();
+  const [open, setOpen] = useState(true)
+  const {courseId, moduleId, lessonId} = useParams();
+  const course_id = Array.isArray(courseId) ? courseId[0] : courseId ?? "";
+  const module_id = Array.isArray(moduleId) ? moduleId[0] : moduleId ?? "";
+  const lesson_id = Array.isArray(lessonId) ? lessonId[0] : lessonId ?? "";
+  const {data: course, isLoading, error} = useQuery({
+    queryKey: ["course", courseId, session?.token],
+    queryFn: () => CourseService.getCourseById(course_id, session!.token),
+    enabled: !!courseId && !!session?.token,
+  });
+  const modules = course?.modules ?? [];
+
+  return (
+    <div className={'w-full h-full flex gap-8 px-10 py-5 items-start'}>
+      <div className={'w-[70%]'}>
+        {children}
+      </div>
+      <div className={'w-[30%] flex flex-col gap-4'}>
+        <div className={'flex flex-col gap-6 bg-white rounded-[20px] p-6'}>
+          <div className={'flex items-center justify-between gap-4'}>
+            <h2 className={'text-[24px] font-semibold text-black'}>Содержание</h2>
+            <button onClick={() => setOpen(!open)}
+                    className={'text-[#676E76] p-2 border border-[#676E76] border-opacity-20 rounded-full'}>
+              {open ? (
+                <Icon icon={'mdi-light:chevron-down'} className={'w-6 h-6'}/>
+              ) : (
+                <Icon icon={'mdi-light:chevron-up'} className={'w-6 h-6'}/>
+              )}
+            </button>
+          </div>
+          {open && (
+            <>
+              <hr/>
+              {modules.map((module, index) => (
+                <Fragment key={index}>
+                  <MyCourseModuleSidebar key={index} data={module} course_id={course_id} module_id={module_id}
+                                         lesson_id={lesson_id}/>
+                  {index < modules.length - 1 && (
+                    <hr className="border-t border-[#EAECF0]"/>
+                  )}
+                </Fragment>
+              ))}
+            </>
+          )}
+        </div>
+        <ChatComponent/>
+      </div>
+    </div>
+  )
+    ;
+}
+
+interface MyCourseModuleSidebarProps {
+  data: CourseModule;
+  course_id: string;
+  module_id: string;
+  lesson_id: string;
+}
+
+const MyCourseModuleSidebar = ({data, course_id, module_id, lesson_id}: MyCourseModuleSidebarProps) => {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="bg-transparent">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex justify-between items-start gap-2"
+      >
+        <h3 className="text-[16px] font-semibold text-black text-left">{data.title}</h3>
+        {open ? (
+          <Icon icon={'icons8:minus'} className={'w-6 h-6 text-gray-500 shrink-0'}/>
+        ) : (
+          <Icon icon={'icons8:plus'} className={'w-6 h-6 text-gray-500 shrink-0'}/>)
+        }
+      </button>
+
+      {open && (
+        <div className="grid grid-cols-2 gap-6 pt-5">
+          {data.lessons.map((lesson, i) => (
+            <Link
+              href={`/dashboard/myEducation/${course_id}/module/${module_id}/lesson/${lesson_id}`}
+              key={i}
+              className="relative bg-white rounded-lg overflow-hidden"
+            >
+              {/* thumbnail */}
+              <div className="relative w-full aspect-video z-0">
+                <Image
+                  src={"/coursePlaceholder.png"}
+                  alt={lesson.title}
+                  fill
+                  className="object-cover"
+                />
+                {/*<div className="absolute top-2 left-2 z-20">*/}
+                {/*  {lesson.locked ? (*/}
+                {/*    <Icon*/}
+                {/*      icon="material-symbols:lock"*/}
+                {/*      className="w-8 h-8 text-white bg-black rounded-full p-2"*/}
+                {/*    />*/}
+                {/*  ) : lesson.completed ? (*/}
+                {/*    <Icon*/}
+                {/*      icon="mdi:tick"*/}
+                {/*      className="w-8 h-8 text-white bg-[#53B483] rounded-full p-2"*/}
+                {/*    />*/}
+                {/*  ) : null}*/}
+                {/*</div>*/}
+
+                <div
+                  className="absolute bottom-2 left-2 z-20 bg-white bg-opacity-75 px-2 py-1 rounded text-xs font-medium text-gray-800">
+                  {lesson.duration}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <p className="text-sm font-semibold text-gray-900">
+                  {`${i + 1}. ${lesson.title}`}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+export default ModuleLayout;
