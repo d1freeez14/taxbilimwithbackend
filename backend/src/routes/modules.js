@@ -2,35 +2,57 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../lib/db');
 const { requireRole } = require('../middleware/auth');
+const { formatModuleStatistics, getModuleSummaryText } = require('../lib/formatDuration');
 
 const router = express.Router();
 
-// Get modules for a course
+// Get modules for a course with statistics
 router.get('/course/:courseId', async (req, res) => {
   try {
     const { courseId } = req.params;
     
     const modulesQuery = `
-      SELECT * FROM modules 
-      WHERE course_id = $1 
-      ORDER BY "order"
+      SELECT 
+        m.*,
+        COALESCE(m.lesson_count, 0) as lesson_count,
+        COALESCE(m.assignment_count, 0) as assignment_count,
+        COALESCE(m.total_duration, 0) as total_duration,
+        COALESCE(m.duration_weeks, 1) as duration_weeks
+      FROM modules m
+      WHERE m.course_id = $1 
+      ORDER BY m."order"
     `;
     
     const result = await query(modulesQuery, [courseId]);
-    res.json({ modules: result.rows });
+    
+    // Format module statistics
+    const formattedModules = result.rows.map(module => ({
+      ...module,
+      statistics: formatModuleStatistics(module),
+      summaryText: getModuleSummaryText(module)
+    }));
+    
+    res.json({ modules: formattedModules });
   } catch (error) {
     console.error('Error fetching modules:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });
 
-// Get module by ID
+// Get module by ID with statistics
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
     const moduleQuery = `
-      SELECT * FROM modules WHERE id = $1
+      SELECT 
+        m.*,
+        COALESCE(m.lesson_count, 0) as lesson_count,
+        COALESCE(m.assignment_count, 0) as assignment_count,
+        COALESCE(m.total_duration, 0) as total_duration,
+        COALESCE(m.duration_weeks, 1) as duration_weeks
+      FROM modules m 
+      WHERE m.id = $1
     `;
     
     const result = await query(moduleQuery, [id]);
@@ -39,7 +61,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Module not found.' });
     }
     
-    res.json({ module: result.rows[0] });
+    const module = result.rows[0];
+    const formattedModule = {
+      ...module,
+      statistics: formatModuleStatistics(module),
+      summaryText: getModuleSummaryText(module)
+    };
+    
+    res.json({ module: formattedModule });
   } catch (error) {
     console.error('Error fetching module:', error);
     res.status(500).json({ message: 'Server error.' });
@@ -147,6 +176,124 @@ router.delete('/:id', requireRole(['ADMIN']), async (req, res) => {
     res.json({ message: 'Module deleted successfully.' });
   } catch (error) {
     console.error('Error deleting module:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+/**
+ * Calculate and update module statistics
+ * @param {string} moduleId - Module ID
+ * @returns {Object} Updated statistics
+ */
+async function calculateModuleStatistics(moduleId) {
+  try {
+    // Calculate module statistics
+    const moduleStatsQuery = `
+      SELECT 
+        COUNT(l.id) as lesson_count,
+        COALESCE(SUM(l.duration), 0) as total_duration
+      FROM lessons l
+      WHERE l.module_id = $1
+    `;
+
+    const moduleStatsResult = await query(moduleStatsQuery, [moduleId]);
+    const { lesson_count, total_duration } = moduleStatsResult.rows[0];
+
+    // Update module statistics
+    const updateModuleQuery = `
+      UPDATE modules 
+      SET 
+        lesson_count = $1,
+        total_duration = $2,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING *
+    `;
+
+    const moduleResult = await query(updateModuleQuery, [
+      parseInt(lesson_count) || 0,
+      parseInt(total_duration) || 0,
+      moduleId
+    ]);
+
+    return {
+      lessonCount: parseInt(lesson_count) || 0,
+      totalDuration: parseInt(total_duration) || 0,
+      module: moduleResult.rows[0]
+    };
+  } catch (error) {
+    console.error('Error calculating module statistics:', error);
+    throw error;
+  }
+}
+
+/**
+ * @swagger
+ * /api/modules/{id}/statistics/calculate:
+ *   post:
+ *     summary: Calculate module statistics
+ *     description: Calculate and update module statistics (lessons, duration)
+ *     tags: [Modules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Module ID
+ *     responses:
+ *       200:
+ *         description: Module statistics calculated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statistics:
+ *                   type: object
+ *                   properties:
+ *                     lessonCount:
+ *                       type: integer
+ *                     totalDuration:
+ *                       type: integer
+ *                 module:
+ *                   $ref: '#/components/schemas/Module'
+ *       404:
+ *         description: Module not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/:id/statistics/calculate', requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if module exists
+    const moduleCheckQuery = `SELECT id FROM modules WHERE id = $1`;
+    const moduleCheckResult = await query(moduleCheckQuery, [id]);
+    
+    if (moduleCheckResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Module not found.' });
+    }
+
+    const statistics = await calculateModuleStatistics(id);
+
+    res.json({ 
+      statistics: {
+        lessonCount: statistics.lessonCount,
+        totalDuration: statistics.totalDuration
+      },
+      module: statistics.module
+    });
+  } catch (error) {
+    console.error('Error calculating module statistics:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });

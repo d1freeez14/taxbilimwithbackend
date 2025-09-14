@@ -25,6 +25,7 @@ const initDatabase = async () => {
         name VARCHAR(255) NOT NULL,
         avatar VARCHAR(255),
         bio TEXT,
+        description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -42,6 +43,10 @@ const initDatabase = async () => {
         is_published BOOLEAN DEFAULT false,
         is_sales_leader BOOLEAN DEFAULT false,
         is_recorded BOOLEAN DEFAULT true,
+        progress INTEGER DEFAULT 0,
+        module_count INTEGER DEFAULT 0,
+        lesson_count INTEGER DEFAULT 0,
+        total_duration INTEGER DEFAULT 0,
         features TEXT[],
         what_you_learn TEXT[],
         author_id INTEGER REFERENCES authors(id) ON DELETE CASCADE,
@@ -57,6 +62,10 @@ const initDatabase = async () => {
         title VARCHAR(255) NOT NULL,
         "order" INTEGER NOT NULL,
         course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+        lesson_count INTEGER DEFAULT 0,
+        assignment_count INTEGER DEFAULT 0,
+        total_duration INTEGER DEFAULT 0,
+        duration_weeks INTEGER DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -72,6 +81,11 @@ const initDatabase = async () => {
         "order" INTEGER NOT NULL,
         module_id INTEGER REFERENCES modules(id) ON DELETE CASCADE,
         duration INTEGER,
+        image VARCHAR(255),
+        locked BOOLEAN DEFAULT false,
+        lesson_type VARCHAR(50) DEFAULT 'VIDEO',
+        test_id INTEGER,
+        url VARCHAR(500),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -130,6 +144,7 @@ const initDatabase = async () => {
         course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
         enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         completed_at TIMESTAMP,
+        is_recorded BOOLEAN DEFAULT true,
         UNIQUE(user_id, course_id)
       )
     `);
