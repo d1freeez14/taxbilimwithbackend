@@ -17,8 +17,19 @@ router.get('/course/:courseId', async (req, res) => {
         COALESCE(m.lesson_count, 0) as lesson_count,
         COALESCE(m.assignment_count, 0) as assignment_count,
         COALESCE(m.total_duration, 0) as total_duration,
-        COALESCE(m.duration_weeks, 1) as duration_weeks
+        COALESCE(m.duration_weeks, 1) as duration_weeks,
+        COALESCE(test_stats.test_count, 0) as test_count,
+        COALESCE(test_stats.test_titles, '') as test_titles
       FROM modules m
+      LEFT JOIN (
+        SELECT 
+          l.module_id,
+          COUNT(t.id) as test_count,
+          STRING_AGG(t.title, ', ') as test_titles
+        FROM lessons l
+        LEFT JOIN tests t ON l.id = t.lesson_id
+        GROUP BY l.module_id
+      ) test_stats ON m.id = test_stats.module_id
       WHERE m.course_id = $1 
       ORDER BY m."order"
     `;
@@ -29,7 +40,10 @@ router.get('/course/:courseId', async (req, res) => {
     const formattedModules = result.rows.map(module => ({
       ...module,
       statistics: formatModuleStatistics(module),
-      summaryText: getModuleSummaryText(module)
+      summaryText: getModuleSummaryText(module),
+      hasTests: parseInt(module.test_count) > 0,
+      testCount: parseInt(module.test_count),
+      testTitles: module.test_titles ? module.test_titles.split(', ') : []
     }));
     
     res.json({ modules: formattedModules });
@@ -50,8 +64,20 @@ router.get('/:id', async (req, res) => {
         COALESCE(m.lesson_count, 0) as lesson_count,
         COALESCE(m.assignment_count, 0) as assignment_count,
         COALESCE(m.total_duration, 0) as total_duration,
-        COALESCE(m.duration_weeks, 1) as duration_weeks
-      FROM modules m 
+        COALESCE(m.duration_weeks, 1) as duration_weeks,
+        COALESCE(test_stats.test_count, 0) as test_count,
+        COALESCE(test_stats.test_titles, '') as test_titles
+      FROM modules m
+      LEFT JOIN (
+        SELECT 
+          l.module_id,
+          COUNT(t.id) as test_count,
+          STRING_AGG(t.title, ', ') as test_titles
+        FROM lessons l
+        LEFT JOIN tests t ON l.id = t.lesson_id
+        WHERE l.module_id = $1
+        GROUP BY l.module_id
+      ) test_stats ON m.id = test_stats.module_id
       WHERE m.id = $1
     `;
     
@@ -65,7 +91,10 @@ router.get('/:id', async (req, res) => {
     const formattedModule = {
       ...module,
       statistics: formatModuleStatistics(module),
-      summaryText: getModuleSummaryText(module)
+      summaryText: getModuleSummaryText(module),
+      hasTests: parseInt(module.test_count) > 0,
+      testCount: parseInt(module.test_count),
+      testTitles: module.test_titles ? module.test_titles.split(', ') : []
     };
     
     res.json({ module: formattedModule });
@@ -294,6 +323,73 @@ router.post('/:id/statistics/calculate', requireRole(['TEACHER', 'ADMIN']), asyn
     });
   } catch (error) {
     console.error('Error calculating module statistics:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Check if module has tests
+router.get('/:id/tests', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const testsQuery = `
+      SELECT 
+        t.id,
+        t.title,
+        t.description,
+        t.time_limit,
+        t.passing_score,
+        l.title as lesson_title,
+        l.order as lesson_order
+      FROM tests t
+      JOIN lessons l ON t.lesson_id = l.id
+      WHERE l.module_id = $1
+      ORDER BY l.order, t.id
+    `;
+    
+    const result = await query(testsQuery, [id]);
+    
+    res.json({ 
+      hasTests: result.rows.length > 0,
+      testCount: result.rows.length,
+      tests: result.rows
+    });
+  } catch (error) {
+    console.error('Error checking module tests:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Get module test summary
+router.get('/:id/tests/summary', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const summaryQuery = `
+      SELECT 
+        COUNT(t.id) as total_tests,
+        COUNT(CASE WHEN t.passing_score IS NOT NULL THEN 1 END) as tests_with_passing_score,
+        AVG(t.time_limit) as avg_time_limit,
+        AVG(t.passing_score) as avg_passing_score,
+        STRING_AGG(t.title, ', ') as test_titles
+      FROM tests t
+      JOIN lessons l ON t.lesson_id = l.id
+      WHERE l.module_id = $1
+    `;
+    
+    const result = await query(summaryQuery, [id]);
+    const summary = result.rows[0];
+    
+    res.json({
+      hasTests: parseInt(summary.total_tests) > 0,
+      totalTests: parseInt(summary.total_tests),
+      testsWithPassingScore: parseInt(summary.tests_with_passing_score),
+      avgTimeLimit: summary.avg_time_limit ? Math.round(summary.avg_time_limit) : null,
+      avgPassingScore: summary.avg_passing_score ? Math.round(summary.avg_passing_score) : null,
+      testTitles: summary.test_titles ? summary.test_titles.split(', ') : []
+    });
+  } catch (error) {
+    console.error('Error getting module test summary:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });
