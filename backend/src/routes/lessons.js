@@ -6,6 +6,63 @@ const { formatLesson, isValidLessonType } = require('../lib/lessonTypes');
 
 const router = express.Router();
 
+// Get all lessons
+router.get('/', async (req, res) => {
+  try {
+    const { lessonType, moduleId, courseId, userId } = req.query;
+    
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+    
+    if (lessonType) {
+      paramCount++;
+      whereClause += ` AND l.lesson_type = $${paramCount}`;
+      params.push(lessonType);
+    }
+    
+    if (moduleId) {
+      paramCount++;
+      whereClause += ` AND l.module_id = $${paramCount}`;
+      params.push(moduleId);
+    }
+    
+    if (courseId) {
+      paramCount++;
+      whereClause += ` AND m.course_id = $${paramCount}`;
+      params.push(courseId);
+    }
+    
+    const lessonsQuery = `
+      SELECT 
+        l.*,
+        m.title as module_title,
+        m.course_id,
+        co.title as course_title,
+        false as is_unlocked,
+        CASE 
+          WHEN $${paramCount + 1} IS NULL THEN false
+          ELSE COALESCE(lp.completed, false)
+        END as is_finished
+      FROM lessons l
+      JOIN modules m ON l.module_id = m.id
+      JOIN courses co ON m.course_id = co.id
+      LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $${paramCount + 1}
+      ${whereClause}
+      ORDER BY m.course_id, m."order", l."order"
+    `;
+    
+    params.push(userId || null);
+    const result = await query(lessonsQuery, params);
+    
+    const formattedLessons = result.rows.map(lesson => formatLesson(lesson, lesson.is_unlocked, lesson.is_finished));
+    res.json({ lessons: formattedLessons });
+  } catch (error) {
+    console.error('Error fetching lessons:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // Get lessons for a module
 router.get('/module/:moduleId', async (req, res) => {
   try {
@@ -29,8 +86,13 @@ router.get('/module/:moduleId', async (req, res) => {
             )
             AND lp.completed = true
           )
-        END as is_unlocked
+        END as is_unlocked,
+        CASE 
+          WHEN $2 IS NULL THEN false
+          ELSE COALESCE(lp.completed, false)
+        END as is_finished
       FROM lessons l
+      LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $2
       WHERE l.module_id = $1
       ORDER BY l."order"
     `;
@@ -39,7 +101,7 @@ router.get('/module/:moduleId', async (req, res) => {
     
     // Format lessons with type information
     const formattedLessons = result.rows.map(lesson => 
-      formatLesson(lesson, lesson.is_unlocked)
+      formatLesson(lesson, lesson.is_unlocked, lesson.is_finished)
     );
     
     res.json({ lessons: formattedLessons });
@@ -72,8 +134,13 @@ router.get('/:id', async (req, res) => {
             )
             AND lp.completed = true
           )
-        END as is_unlocked
+        END as is_unlocked,
+        CASE 
+          WHEN $2 IS NULL THEN false
+          ELSE COALESCE(lp.completed, false)
+        END as is_finished
       FROM lessons l
+      LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $2
       WHERE l.id = $1
     `;
     
@@ -84,7 +151,7 @@ router.get('/:id', async (req, res) => {
     }
     
     const lesson = result.rows[0];
-    const formattedLesson = formatLesson(lesson, lesson.is_unlocked);
+    const formattedLesson = formatLesson(lesson, lesson.is_unlocked, lesson.is_finished);
     
     res.json({ lesson: formattedLesson });
   } catch (error) {
@@ -275,7 +342,7 @@ router.get('/:id/navigate', auth, async (req, res) => {
     const userId = req.user.id;
 
     const lessonQuery = `
-      SELECT l.*, lp.completed
+      SELECT l.*, lp.completed as is_finished
       FROM lessons l
       LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $2
       WHERE l.id = $1
@@ -288,15 +355,83 @@ router.get('/:id/navigate', auth, async (req, res) => {
     }
 
     const lesson = result.rows[0];
-    const formattedLesson = formatLesson(lesson, true);
+    const formattedLesson = formatLesson(lesson, true, lesson.is_finished);
     
     res.json({ 
       lesson: formattedLesson,
       navigationUrl: formattedLesson.navigationUrl,
-      isCompleted: lesson.completed || false
+      isCompleted: lesson.is_finished || false
     });
   } catch (error) {
     console.error('Error getting lesson navigation:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Mark lesson as completed
+router.post('/:id/complete', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if lesson exists
+    const lessonQuery = `SELECT id FROM lessons WHERE id = $1`;
+    const lessonResult = await query(lessonQuery, [id]);
+    
+    if (lessonResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Lesson not found.' });
+    }
+
+    // Insert or update lesson progress
+    const progressQuery = `
+      INSERT INTO lesson_progress (user_id, lesson_id, completed, completed_at)
+      VALUES ($1, $2, true, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_id, lesson_id)
+      DO UPDATE SET 
+        completed = true,
+        completed_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+
+    const result = await query(progressQuery, [userId, id]);
+    
+    res.json({ 
+      message: 'Lesson marked as completed.',
+      progress: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error marking lesson as completed:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Mark lesson as incomplete
+router.post('/:id/incomplete', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Update lesson progress
+    const progressQuery = `
+      UPDATE lesson_progress 
+      SET completed = false, completed_at = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1 AND lesson_id = $2
+      RETURNING *
+    `;
+
+    const result = await query(progressQuery, [userId, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Lesson progress not found.' });
+    }
+    
+    res.json({ 
+      message: 'Lesson marked as incomplete.',
+      progress: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error marking lesson as incomplete:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });

@@ -4,6 +4,33 @@ const { requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Get all enrollments (ADMIN only)
+router.get('/', requireRole(['ADMIN']), async (req, res) => {
+  try {
+    const enrollmentsQuery = `
+      SELECT 
+        e.*,
+        c.title as course_title,
+        c.image_src as course_image,
+        c.price as course_price,
+        a.name as author_name,
+        u.name as user_name,
+        u.email as user_email
+      FROM enrollments e
+      JOIN courses c ON e.course_id = c.id
+      JOIN authors a ON c.author_id = a.id
+      JOIN users u ON e.user_id = u.id
+      ORDER BY e.enrolled_at DESC
+    `;
+
+    const result = await query(enrollmentsQuery);
+    res.json({ enrollments: result.rows });
+  } catch (error) {
+    console.error('Error fetching enrollments:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // Get user enrollments
 router.get('/my-enrollments', requireRole(['STUDENT', 'TEACHER', 'ADMIN']), async (req, res) => {
   try {

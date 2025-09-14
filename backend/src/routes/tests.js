@@ -5,6 +5,32 @@ const { requireRole, auth } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Get all tests
+router.get('/', async (req, res) => {
+  try {
+    const testsQuery = `
+      SELECT 
+        t.*,
+        l.title as lesson_title,
+        l.module_id,
+        m.title as module_title,
+        m.course_id,
+        co.title as course_title
+      FROM tests t
+      LEFT JOIN lessons l ON t.lesson_id = l.id
+      LEFT JOIN modules m ON l.module_id = m.id
+      LEFT JOIN courses co ON m.course_id = co.id
+      ORDER BY t.created_at DESC
+    `;
+    
+    const result = await query(testsQuery);
+    res.json({ tests: result.rows });
+  } catch (error) {
+    console.error('Error fetching tests:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // Get test by ID
 router.get('/:id', async (req, res) => {
   try {

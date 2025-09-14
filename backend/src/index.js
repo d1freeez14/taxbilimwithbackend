@@ -16,6 +16,7 @@ const lessonRoutes = require('./routes/lessons');
 const userRoutes = require('./routes/users');
 const enrollmentRoutes = require('./routes/enrollments');
 const certificateRoutes = require('./routes/certificates');
+const publicCertificateRoutes = require('./routes/public-certificates');
 const reviewRoutes = require('./routes/reviews');
 const favoriteRoutes = require('./routes/favorites');
 const categoryRoutes = require('./routes/categories');
@@ -137,12 +138,16 @@ app.use('/api/modules', authMiddleware.auth, moduleRoutes);
 app.use('/api/lessons', authMiddleware.auth, lessonRoutes);
 app.use('/api/users', authMiddleware.auth, userRoutes);
 app.use('/api/enrollments', authMiddleware.auth, enrollmentRoutes);
-app.use('/api/certificates', authMiddleware.auth, certificateRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', authMiddleware.auth, favoriteRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/progress', authMiddleware.auth, progressRoutes);
 app.use('/api/tests', authMiddleware.auth, testRoutes);
+
+// Public certificate routes (no auth required) - MUST be before protected routes
+app.use('/api/certificates', publicCertificateRoutes);
+// Protected certificate routes (auth required)
+app.use('/api/certificates', authMiddleware.auth, certificateRoutes);
 
 // Error handling
 app.use(errorHandler);

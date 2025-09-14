@@ -102,13 +102,15 @@ function getLessonAccess(lesson, isUnlocked) {
  * Format lesson for display with type information
  * @param {Object} lesson - Lesson object
  * @param {boolean} isUnlocked - Whether lesson is unlocked for user
+ * @param {boolean} isFinished - Whether lesson is finished by user
  * @returns {Object} Formatted lesson
  */
-function formatLesson(lesson, isUnlocked = true) {
+function formatLesson(lesson, isUnlocked = true, isFinished = false) {
   const access = getLessonAccess(lesson, isUnlocked);
   
   return {
     ...lesson,
+    is_finished: isFinished,
     access,
     navigationUrl: getLessonNavigationUrl(lesson),
     typeLabel: access.label,

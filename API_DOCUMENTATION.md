@@ -223,6 +223,44 @@ Content-Type: application/json
 
 ### Lessons
 
+#### Get All Lessons (with progress tracking)
+```http
+GET /api/lessons?userId={userId}
+Authorization: Bearer <token>
+```
+
+**Parameters:**
+- `userId` (optional) - User ID to get progress information
+
+**Response:**
+```json
+{
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Урок 1: Что такое налоги",
+      "lesson_type": "VIDEO",
+      "is_finished": true,
+      "is_unlocked": false,
+      "access": {
+        "isAccessible": true,
+        "isLocked": false,
+        "type": "VIDEO",
+        "label": "Видеоурок",
+        "icon": "play-circle"
+      },
+      "navigationUrl": "/lesson/1/video"
+    }
+  ]
+}
+```
+
+#### Get Lessons by Module (with progress tracking)
+```http
+GET /api/lessons/module/:moduleId
+Authorization: Bearer <token>
+```
+
 #### Get Lesson by ID (with completion status)
 ```http
 GET /api/lessons/:id
@@ -240,11 +278,17 @@ Authorization: Bearer <token>
     "order": 1,
     "module_id": 1,
     "duration": 15,
-    "module_title": "Модуль 1: Введение в налогообложение",
-    "course_title": "Основы налогообложения",
-    "course_id": 1,
-    "completed": false,
-    "completed_at": null
+    "lesson_type": "VIDEO",
+    "is_finished": true,
+    "is_unlocked": false,
+    "access": {
+      "isAccessible": true,
+      "isLocked": false,
+      "type": "VIDEO",
+      "label": "Видеоурок",
+      "icon": "play-circle"
+    },
+    "navigationUrl": "/lesson/1/video"
   }
 }
 ```
@@ -258,10 +302,38 @@ Authorization: Bearer <token>
 **Response:**
 ```json
 {
-  "message": "Lesson completed successfully.",
-  "lesson_id": 1,
-  "completed": true,
-  "completed_at": "2025-08-18T16:45:00.000Z"
+  "message": "Lesson marked as completed.",
+  "progress": {
+    "id": 1,
+    "user_id": 3,
+    "lesson_id": 1,
+    "completed": true,
+    "completed_at": "2025-09-14T19:27:47.987Z",
+    "created_at": "2025-09-14T19:27:47.987Z",
+    "updated_at": "2025-09-14T19:27:47.987Z"
+  }
+}
+```
+
+#### Mark Lesson as Incomplete
+```http
+POST /api/lessons/:id/incomplete
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "message": "Lesson marked as incomplete.",
+  "progress": {
+    "id": 1,
+    "user_id": 3,
+    "lesson_id": 1,
+    "completed": false,
+    "completed_at": null,
+    "created_at": "2025-09-14T19:27:47.987Z",
+    "updated_at": "2025-09-14T19:27:54.136Z"
+  }
 }
 ```
 
@@ -643,33 +715,169 @@ GET /api/certificates/my-certificates
 Authorization: Bearer <token>
 ```
 
+**Query Parameters:**
+- `search` (optional): Search by title or date
+- `status` (optional): Filter by status (ACTIVE, INACTIVE, REVOKED)
+- `type` (optional): Filter by type (COMPLETION, ACHIEVEMENT, PARTICIPATION, CUSTOM)
+- `sortBy` (optional): Sort by field (issued_at, title, completion_date, created_at)
+- `sortOrder` (optional): Sort order (ASC, DESC)
+
 **Response:**
 ```json
 {
   "certificates": [
     {
-      "id": 1,
-      "user_id": 1,
+      "id": 3,
+      "user_id": 3,
       "course_id": 1,
-      "issued_at": "2025-08-12T22:00:00.000Z",
-      "certificate_url": "/certificates/cert_1.pdf",
+      "title": "Сертифицированный Налоговый консультант по вопросам имущества",
+      "description": "Данный сертификат подтверждает успешное прохождение курса...",
+      "certificate_type": "COMPLETION",
+      "instructor_name": "Лана Б.",
+      "completion_date": "2024-01-20T00:00:00.000Z",
+      "certificate_number": "CERT-1757878696064-DK3DBVPSF",
+      "verification_code": "DCB2DF388547CB5E",
+      "is_verified": false,
+      "pdf_url": "/api/certificates/3_1_1757878696064.pdf",
+      "share_url": "http://localhost:3000/certificates/verify/DCB2DF388547CB5E",
+      "status": "ACTIVE",
+      "issued_at": "2025-09-14T19:38:16.064Z",
       "course_title": "Основы налогообложения",
-      "course_image_src": "/coursePlaceholder.png"
+      "course_image": "/coursePlaceholder.png",
+      "author_name": "Лана Б."
     }
   ]
 }
 ```
 
+#### Get Certificate by ID
+```http
+GET /api/certificates/:id
+Authorization: Bearer <token>
+```
+
 #### Generate Certificate
 ```http
-POST /api/certificates
+POST /api/certificates/generate/:courseId
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "courseId": 1
+  "title": "Certificate Title",
+  "description": "Certificate description",
+  "certificateType": "COMPLETION",
+  "instructorName": "Instructor Name",
+  "completionDate": "2024-01-20"
 }
 ```
+
+#### Download Certificate
+```http
+GET /api/certificates/:id/download
+Authorization: Bearer <token>
+```
+
+#### Get Share Link
+```http
+GET /api/certificates/:id/share
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "shareUrl": "http://localhost:3000/certificates/verify/DCB2DF388547CB5E",
+  "verificationCode": "DCB2DF388547CB5E",
+  "certificateNumber": "CERT-1757878696064-DK3DBVPSF"
+}
+```
+
+#### Verify Certificate (Public)
+```http
+GET /api/certificates/verify/:code
+```
+
+**Response:**
+```json
+{
+  "certificate": {
+    "id": 3,
+    "title": "Сертифицированный Налоговый консультант по вопросам имущества",
+    "description": "Данный сертификат подтверждает успешное прохождение курса...",
+    "certificate_type": "COMPLETION",
+    "instructor_name": "Лана Б.",
+    "completion_date": "2024-01-20T00:00:00.000Z",
+    "certificate_number": "CERT-1757878696064-DK3DBVPSF",
+    "verification_code": "DCB2DF388547CB5E",
+    "status": "ACTIVE",
+    "course_title": "Основы налогообложения",
+    "author_name": "Лана Б.",
+    "user_name": "Student User",
+    "user_email": "student@taxbilim.com"
+  },
+  "isValid": true,
+  "message": "Certificate verified successfully"
+}
+```
+
+#### Update Certificate (ADMIN/TEACHER)
+```http
+PUT /api/certificates/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Updated Title",
+  "description": "Updated description",
+  "certificateType": "ACHIEVEMENT",
+  "status": "ACTIVE",
+  "instructorName": "Updated Instructor",
+  "completionDate": "2024-02-01"
+}
+```
+
+#### Delete Certificate (ADMIN)
+```http
+DELETE /api/certificates/:id
+Authorization: Bearer <token>
+```
+
+#### Get Certificate Statistics (ADMIN)
+```http
+GET /api/certificates/stats/overview
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "statistics": {
+    "total_certificates": "3",
+    "active_certificates": "3",
+    "inactive_certificates": "0",
+    "revoked_certificates": "0",
+    "completion_certificates": "2",
+    "achievement_certificates": "1",
+    "certificates_last_30_days": "3",
+    "certificates_last_7_days": "3"
+  }
+}
+```
+
+#### Get All Certificates (ADMIN)
+```http
+GET /api/certificates
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+- `search` (optional): Search term
+- `status` (optional): Filter by status
+- `type` (optional): Filter by type
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
+
+**Note:** For detailed certificate API documentation, see `CERTIFICATES_API_DOCUMENTATION.md`
 
 ### Categories
 
@@ -765,8 +973,19 @@ GET /api/categories
   "order": 1,
   "module_id": 1,
   "duration": 15,
-  "completed": false,
-  "completed_at": null
+  "lesson_type": "VIDEO",
+  "is_finished": true,
+  "is_unlocked": false,
+  "access": {
+    "isAccessible": true,
+    "isLocked": false,
+    "type": "VIDEO",
+    "label": "Видеоурок",
+    "icon": "play-circle"
+  },
+  "navigationUrl": "/lesson/1/video",
+  "typeLabel": "Видеоурок",
+  "typeIcon": "play-circle"
 }
 ```
 
