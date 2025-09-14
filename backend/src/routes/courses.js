@@ -198,11 +198,12 @@ router.get('/', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user ? req.user.id : null;
 
-    // Get course with author
+    // Get course with author and favorite status
     const courseQuery = `
       SELECT 
         c.*,
@@ -214,7 +215,14 @@ router.get('/:id', async (req, res) => {
         COUNT(DISTINCT r.id) as review_count,
         COALESCE(c.module_count, 0) as module_count,
         COALESCE(c.lesson_count, 0) as lesson_count,
-        COALESCE(c.total_duration, 0) as total_duration
+        COALESCE(c.total_duration, 0) as total_duration,
+        CASE 
+          WHEN $2 IS NOT NULL AND EXISTS (
+            SELECT 1 FROM course_favorites f 
+            WHERE f.user_id = $2 AND f.course_id = c.id
+          ) THEN true 
+          ELSE false 
+        END as is_favorite
       FROM courses c
       LEFT JOIN authors a ON c.author_id = a.id
       LEFT JOIN enrollments e ON c.id = e.course_id
@@ -223,7 +231,7 @@ router.get('/:id', async (req, res) => {
       GROUP BY c.id, a.id
     `;
 
-    const courseResult = await query(courseQuery, [id]);
+    const courseResult = await query(courseQuery, [id, userId]);
     
     if (courseResult.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found.' });
