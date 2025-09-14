@@ -239,6 +239,8 @@ router.get('/:id', async (req, res) => {
         COALESCE(m.assignment_count, 0) as assignment_count,
         COALESCE(m.total_duration, 0) as total_duration,
         COALESCE(m.duration_weeks, 1) as duration_weeks,
+        COALESCE(test_stats.test_count, 0) as test_count,
+        COALESCE(test_stats.test_titles, '') as test_titles,
         json_agg(
           json_build_object(
             'id', l.id,
@@ -254,8 +256,17 @@ router.get('/:id', async (req, res) => {
         ) as lessons
       FROM modules m
       LEFT JOIN lessons l ON m.id = l.module_id
+      LEFT JOIN (
+        SELECT 
+          l.module_id,
+          COUNT(t.id) as test_count,
+          STRING_AGG(t.title, ', ') as test_titles
+        FROM lessons l
+        LEFT JOIN tests t ON l.id = t.lesson_id
+        GROUP BY l.module_id
+      ) test_stats ON m.id = test_stats.module_id
       WHERE m.course_id = $1
-      GROUP BY m.id
+      GROUP BY m.id, test_stats.test_count, test_stats.test_titles
       ORDER BY m."order"
     `;
 
@@ -270,7 +281,10 @@ router.get('/:id', async (req, res) => {
     course.modules = modulesResult.rows.map(module => ({
       ...module,
       statistics: formatModuleStatistics(module),
-      summaryText: getModuleSummaryText(module)
+      summaryText: getModuleSummaryText(module),
+      hasTests: parseInt(module.test_count) > 0,
+      testCount: parseInt(module.test_count),
+      testTitles: module.test_titles ? module.test_titles.split(', ') : []
     }));
 
     // Get reviews statistics
