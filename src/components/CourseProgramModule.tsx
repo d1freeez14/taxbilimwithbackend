@@ -26,8 +26,7 @@ const CourseProgramModule = ({data}: CourseProgramModuleProps) => {
       </button>
 
       <p className="mt-2 text-sm text-gray-500">
-        {data.lessons.length} видеоуроков,
-        {/*{data.tasks} задания, {data.weeks} недели*/}
+        {data.summaryText}
       </p>
 
       {open && (

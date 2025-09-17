@@ -1,13 +1,12 @@
-export interface Author {
-  name: string
-  avatarSrc: string
-}
-
 export interface Certificate {
-  id: number
-  imageSrc: string
-  author: Author
-  category: string
-  courseTitle: string
-  dateReceived: string
+  id: number;
+  user_id: number;
+  course_id: number;
+  issued_at: string;
+  certificate_url: string;
+  course_title: string;
+  course_image: string;
+  course_description: string;
+  author_name: string;
+  author_avatar: string;
 }

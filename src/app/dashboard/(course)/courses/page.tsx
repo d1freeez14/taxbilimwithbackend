@@ -7,27 +7,6 @@ import {useSession} from "@/lib/useSession";
 import {CourseService} from "@/services/course";
 import {useQuery} from "@tanstack/react-query";
 
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  image_src: string;
-  price: number;
-  bg: string;
-  is_published: boolean;
-  is_sales_leader: boolean;
-  is_recorded: boolean;
-  is_favorite?: boolean;
-  features: string[];
-  what_you_learn: string[];
-  author_id: number;
-  author_name: string;
-  author_avatar: string;
-  enrollment_count: number;
-  review_count: number;
-  created_at: string;
-  category_id?: number;
-}
 
 const AllCoursesPage = () => {
   const {getSession} = useSession();

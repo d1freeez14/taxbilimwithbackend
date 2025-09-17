@@ -64,10 +64,12 @@ const MyCourseById = () => {
           </div>
           {course?.is_recorded && (
             <div className={'flex items-center gap-1'}>
-              <div className={'flex items-center gap-1 px-2 py-1 bg-[#F6F7F9] rounded-[1rem]'}>
-                <Icon icon={'heroicons-solid:video-camera'} className={'text-black w-[18px] h-[18px]'}/>
-                <p className={'text-black text-[12px]'}>В записи</p>
-              </div>
+              {course.is_recorded && (
+                <div className={'flex items-center gap-1 px-2 py-1 bg-[#F6F7F9] rounded-[1rem]'}>
+                  <Icon icon={'heroicons-solid:video-camera'} className={'text-black w-[18px] h-[18px]'}/>
+                  <p className={'text-black text-[12px]'}>В записи</p>
+                </div>
+              )}
               <div className={'flex items-center gap-1 px-2 py-1 bg-[#F6F7F9] rounded-[1rem]'}>
                 <div className={'text-black w-[18px] h-[18px] p-[3px]'}>
                   <div className={'bg-[#6AD09D] w-3 h-3 rounded-full'}>
@@ -82,30 +84,30 @@ const MyCourseById = () => {
           <div className={'flex items-center gap-1'}>
             <Icon icon={'solar:document-text-linear'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
             <p className={'text-[#676E76] text-[14px] font-medium'}>Модулей:
-              <span className={'ml-0.5 text-black font-semibold'}>{course?.modules?.length}</span>
+              <span className={'ml-0.5 text-black font-semibold'}>{course?.statistics?.moduleCount}</span>
             </p>
           </div>
           <div className={'flex items-center gap-1'}>
             <Icon icon={'hugeicons:computer-video-call'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
             <p className={'text-[#676E76] text-[14px] font-medium'}>Видео:
-              {/*<span className={'ml-0.5  text-black font-semibold'}>24/78</span>*/}
+              <span className={'ml-0.5  text-black font-semibold'}>{course?.statistics?.lessonCount}</span>
             </p>
           </div>
-          <div className={'flex items-center gap-1'}>
-            <Icon icon={'fa-solid:tasks'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
-            <p className={'text-[#676E76] text-[14px] font-medium'}>Тестов:
-              {/*<span className={'ml-0.5 text-black font-semibold'}>10/24</span>*/}
-            </p>
-          </div>
+          {/*<div className={'flex items-center gap-1'}>*/}
+          {/*  <Icon icon={'fa-solid:tasks'} className={'text-[#676E76] w-[18px] h-[18px]'}/>*/}
+          {/*  <p className={'text-[#676E76] text-[14px] font-medium'}>Тестов:*/}
+          {/*    /!*<span className={'ml-0.5 text-black font-semibold'}>10/24</span>*!/*/}
+          {/*  </p>*/}
+          {/*</div>*/}
         </div>
         <div className="flex items-center justify-between gap-4">
           <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
               className="bg-green-400 h-full rounded-full"
-              style={{width: "40%"}}
+              style={{width: `${course?.progress}%`}}
             ></div>
           </div>
-          <span className="text-[12px] font-medium text-black">40%</span>
+          <span className="text-[12px] font-medium text-black">{course?.progress}%</span>
         </div>
       </div>
       <div className={'flex flex-col gap-6 bg-white rounded-[20px] p-6'}>

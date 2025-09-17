@@ -2,6 +2,7 @@
 import React from "react";
 import {fmtDuration, UIModule, UILesson} from "./CourseCreateProgram";
 import LessonCard from "./LessonCard";
+import {Icon} from "@iconify/react";
 
 interface ModuleCardProps {
   module: UIModule;
@@ -32,16 +33,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   const moduleDuration = module.lessons.reduce((s, l) => s + (l.duration || 0), 0);
 
   return (
-    <div className="rounded-2xl bg-white border border-[#F7A1A1]">
+    <div className="w-full flex flex-col gap-4 rounded-[8px] bg-white border-2 border-[#E5E7EB] p-4">
       {/* Header: input + duration + actions */}
-      <div className="w-full flex items-center justify-between px-4 py-3">
+      <div className="w-full flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="i-lucide-grip-vertical shrink-0" />
+          <Icon icon={'material-symbols:menu-rounded'} className={'w-7 h-7 p-1'}/>
           <input
             value={module.title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Название модуля"
-            className="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#EE7A67]"
+            className="flex-1 min-w-0 rounded-lg border border-[#E5E7EB] px-3.5 py-2.5 text-sm outline-none focus:border-[#EE7A67]"
           />
         </div>
 
@@ -62,36 +63,39 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           <button
             type="button"
             onClick={onToggle}
-            className="text-gray-400 text-base leading-none px-2 py-1"
+            className="text-gray-400 text-base leading-none"
             aria-label={isOpen ? "Свернуть" : "Развернуть"}
           >
-            {isOpen ? "▾" : "▸"}
+            {!isOpen ? (
+              <Icon icon={'famicons:chevron-down-outline'} className={'w-7 h-7 p-1'}/>
+            ) : (
+              <Icon icon={'famicons:chevron-up-outline'} className={'w-7 h-7 p-1'}/>
+            )}
           </button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="px-4 pb-4">
-          <div className="flex flex-col gap-3">
-            {module.lessons.map((l) => (
-              <LessonCard
-                key={l.id}
-                lesson={l}
-                isOpen={isLessonOpen(l.id)}
-                onToggle={() => onToggleLesson(l.id)}
-                onChange={(patch) => onUpdateLesson(l.id, patch)}
-                onDelete={() => onDeleteLesson(l.id)}
-              />
-            ))}
+        <div className="flex flex-col gap-3">
+          {module.lessons.map((l) => (
+            <LessonCard
+              key={l.id}
+              lesson={l}
+              isOpen={isLessonOpen(l.id)}
+              onToggle={() => onToggleLesson(l.id)}
+              onChange={(patch) => onUpdateLesson(l.id, patch)}
+              onDelete={() => onDeleteLesson(l.id)}
+            />
+          ))}
 
-            <button
-              type="button"
-              onClick={onAddLesson}
-              className="mt-1 w-full rounded-xl border border-dashed border-[#F7A1A1] px-4 py-4 text-sm text-[#EE7A67] hover:bg-[#FFF7F6]"
-            >
-              + Добавить новый урок
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onAddLesson}
+            className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#E5E7EB] p-6 text-sm text-[#EE7A67] hover:bg-[#FFF7F6]"
+          >
+            <Icon icon={'uil:plus'} className={'w-7 h-7 p-1 bg-[#FEF2F2] text-[#EE7A67] rounded-full'}/>
+            Добавить новый урок
+          </button>
         </div>
       )}
     </div>

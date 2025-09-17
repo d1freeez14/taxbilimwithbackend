@@ -19,7 +19,7 @@ const MyCertificates = () => {
     'Дата: старая',
     'Название A → Z',
     'Название Z → A',
-    'Популярности',
+    // 'Популярности',
   ];
 
   const {
@@ -74,7 +74,7 @@ const MyCertificates = () => {
           </select>
         </div>
       </div>
-      {loading ? (
+      {isLoading ? (
         <div className="w-full text-center py-10">
           <p className="text-gray-600">Loading certificates...</p>
         </div>
@@ -92,17 +92,7 @@ const MyCertificates = () => {
             .map((certificate) => (
               <CertificateCard
                 key={certificate.id}
-                certificate={{
-                  id: certificate.id,
-                  imageSrc: certificate.course_image,
-                  author: {
-                    name: certificate.author_name,
-                    avatarSrc: "/avatars.png" // Default avatar
-                  },
-                  category: "Налогообложение", // Default category
-                  courseTitle: certificate.course_title,
-                  dateReceived: new Date(certificate.issued_at).toLocaleDateString('ru-RU')
-                }}
+                certificate={certificate}
               />
             ))}
         </div>

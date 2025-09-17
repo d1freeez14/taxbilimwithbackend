@@ -20,11 +20,11 @@ const CertificateCard = ({certificate}:CertificateCardProps) => {
           </div>
           <div className={'flex items-center gap-1 bg-[#F6F7F9] px-2 py-1 rounded-[1rem]'}>
             <Icon icon={'heroicons:document-check-solid'} className={'text-black w-[18px] h-[18px]'}/>
-            <p className={'text-black text-[12px] font-medium'}>{certificate.category}</p>
+            {/*<p className={'text-black text-[12px] font-medium'}>{certificate.category}</p>*/}
           </div>
         </div>
         <h2 className={'text-black text-[20px] font-semibold'}>
-          {certificate.courseTitle}
+          {certificate.course_title}
         </h2>
         <p className={'text-[14px] text-[#676E76] font-medium'}>
           Дата получения:

@@ -31,7 +31,7 @@ const MyCourseModule = ({module, courseId}: MyCourseModuleProps) => {
         <div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pt-5">
           {module?.lessons.map((lesson, i) => (
             <Link
-              href={`${courseId}/module/${module.id}/lesson/${lesson.id}`}
+              href={lesson.lesson_type === "TEST" ? `${courseId}/module/${module.id}/test/${lesson.test_id}` :`${courseId}/module/${module.id}/lesson/${lesson.id}`}
               key={i}
               className="relative bg-white rounded-lg overflow-hidden"
             >

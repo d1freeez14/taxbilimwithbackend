@@ -11,21 +11,19 @@ import {useQuery} from "@tanstack/react-query";
 import {useSession} from "@/lib/useSession";
 import {CourseService} from "@/services/course";
 
-const pluralizeModules = (count: number) => {
-  const absCount = Math.abs(count) % 100;
-  const lastDigit = absCount % 10;
+const pluralizeRu = (count: number, [one, few, many]: [string, string, string]) => {
+  const n = Math.abs(count) % 100;
+  const d = n % 10;
+  const word =
+    n > 10 && n < 20 ? many :
+      d === 1 ? one :
+        d >= 2 && d <= 4 ? few : many;
 
-  if (absCount > 10 && absCount < 20) {
-    return `${count} Модулей`;
-  }
-  if (lastDigit === 1) {
-    return `${count} Модуль`;
-  }
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return `${count} Модуля`;
-  }
-  return `${count} Модулей`;
-}
+  return `${count} ${word}`;
+};
+
+const pluralizeModules   = (c: number) => pluralizeRu(c, ["Модуль", "Модуля", "Модулей"]);
+const pluralizeLessons   = (c: number) => pluralizeRu(c, ["видеоурок", "видеоурока", "видеоуроков"]);
 
 const CoursePageById = () => {
   const {getSession} = useSession();
@@ -88,11 +86,11 @@ const CoursePageById = () => {
                 <div className={'flex items-center gap-1'}>
                   <Icon icon={'solar:document-text-outline'} className={'text-[#676E76] w-[16px] h-[16px]'}/>
                   <p
-                    className={'text-[14px] text-[#676E76] font-medium'}>{pluralizeModules(course.modules?.length ?? 0)}</p>
+                    className={'text-[14px] text-[#676E76] font-medium leading-none'}>{pluralizeModules(course.modules?.length ?? 0)}</p>
                 </div>
                 <div className={'flex items-center gap-1'}>
                   <Icon icon={'mingcute:time-line'} className={'text-[#676E76] w-[16px] h-[16px]'}/>
-                  <p className={'text-[14px] text-[#676E76] font-medium'}>12 часов 30 минут</p>
+                  <p className={'text-[14px] text-[#676E76] font-medium leading-none'}>{course.statistics?.formattedDuration}</p>
                 </div>
               </div>
               <div className={'flex items-center gap-4'}>
@@ -124,7 +122,7 @@ const CoursePageById = () => {
               ))}
             </div>
           </div>
-          <CourseProgram modules={course.modules ?? []}/>
+          <CourseProgram course={course}/>
           <hr className={'border-t border-[#E5E7EA]'}/>
           <div className={'flex flex-col gap-6'}>
             <h2 className={'text-black text-[24px] font-semibold'}>Описание</h2>
