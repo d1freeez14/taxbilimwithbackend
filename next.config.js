@@ -4,6 +4,9 @@ const nextConfig = {
     domains: [
       "utfs.io"
     ]
+  },
+  env: {
+    NEXT_PUBLIC_API_URL: 'http://localhost:5001'
   }
 }
 

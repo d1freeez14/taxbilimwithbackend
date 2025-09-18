@@ -17,7 +17,7 @@ export const AuthService = {
   },
 
   register: async (name: string, email: string, password: string) => {
-    const response = await fetch(`${BACKEND_URL}api/auth/register`, {
+    const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
