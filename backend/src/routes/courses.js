@@ -70,10 +70,11 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, search, category } = req.query;
     const offset = (page - 1) * limit;
+    const userId = req.user ? req.user.id : null;
 
     let whereClause = 'WHERE c.is_published = true';
     let params = [];
@@ -101,6 +102,7 @@ router.get('/', async (req, res) => {
         COUNT(DISTINCT r.id) as review_count,
         AVG(r.rating) as average_rating,
         false as is_favorite,
+        false as is_finished,
         COALESCE(c.module_count, 0) as module_count,
         COALESCE(c.lesson_count, 0) as lesson_count,
         COALESCE(c.total_duration, 0) as total_duration
@@ -125,11 +127,30 @@ router.get('/', async (req, res) => {
 
     const total = parseInt(countResult.rows[0].total);
 
-    // Format course statistics
-    const formattedCourses = coursesResult.rows.map(course => ({
-      ...course,
-      statistics: formatCourseStatistics(course),
-      summaryText: getCourseSummaryText(course)
+    // Format course statistics and add user-specific data
+    const formattedCourses = await Promise.all(coursesResult.rows.map(async (course) => {
+      // Check if course is in favorites and finished (if user is authenticated)
+      if (userId) {
+        const favoriteQuery = `
+          SELECT 1 FROM course_favorites 
+          WHERE user_id = $1 AND course_id = $2
+        `;
+        const favoriteResult = await query(favoriteQuery, [userId, course.id]);
+        course.is_favorite = favoriteResult.rows.length > 0;
+
+        const finishedQuery = `
+          SELECT 1 FROM enrollments 
+          WHERE user_id = $1 AND course_id = $2 AND completed_at IS NOT NULL
+        `;
+        const finishedResult = await query(finishedQuery, [userId, course.id]);
+        course.is_finished = finishedResult.rows.length > 0;
+      }
+
+      return {
+        ...course,
+        statistics: formatCourseStatistics(course),
+        summaryText: getCourseSummaryText(course)
+      };
     }));
 
     res.json({
@@ -203,7 +224,7 @@ router.get('/:id', auth, async (req, res) => {
     const { id } = req.params;
     const userId = req.user ? req.user.id : null;
 
-    // Get course with author and favorite status
+    // Get course with author
     const courseQuery = `
       SELECT 
         c.*,
@@ -216,13 +237,8 @@ router.get('/:id', auth, async (req, res) => {
         COALESCE(c.module_count, 0) as module_count,
         COALESCE(c.lesson_count, 0) as lesson_count,
         COALESCE(c.total_duration, 0) as total_duration,
-        CASE 
-          WHEN $2 IS NOT NULL AND EXISTS (
-            SELECT 1 FROM course_favorites f 
-            WHERE f.user_id = $2 AND f.course_id = c.id
-          ) THEN true 
-          ELSE false 
-        END as is_favorite
+        false as is_favorite,
+        false as is_finished
       FROM courses c
       LEFT JOIN authors a ON c.author_id = a.id
       LEFT JOIN enrollments e ON c.id = e.course_id
@@ -231,13 +247,30 @@ router.get('/:id', auth, async (req, res) => {
       GROUP BY c.id, a.id
     `;
 
-    const courseResult = await query(courseQuery, [id, userId]);
+    const courseResult = await query(courseQuery, [id]);
     
     if (courseResult.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found.' });
     }
 
     const course = courseResult.rows[0];
+
+    // Check if course is in favorites and finished (if user is authenticated)
+    if (userId) {
+      const favoriteQuery = `
+        SELECT 1 FROM course_favorites 
+        WHERE user_id = $1 AND course_id = $2
+      `;
+      const favoriteResult = await query(favoriteQuery, [userId, id]);
+      course.is_favorite = favoriteResult.rows.length > 0;
+
+      const finishedQuery = `
+        SELECT 1 FROM enrollments 
+        WHERE user_id = $1 AND course_id = $2 AND completed_at IS NOT NULL
+      `;
+      const finishedResult = await query(finishedQuery, [userId, id]);
+      course.is_finished = finishedResult.rows.length > 0;
+    }
 
     // Get modules with lessons and statistics
     const modulesQuery = `

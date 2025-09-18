@@ -304,6 +304,98 @@ router.get('/:id/attempts', auth, async (req, res) => {
   }
 });
 
+// Get user's test attempts with detailed info
+router.get('/:id/attempts/detailed', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Get test info
+    const testQuery = `
+      SELECT t.*, l.title as lesson_title, m.title as module_title, c.title as course_title
+      FROM tests t
+      LEFT JOIN lessons l ON t.lesson_id = l.id
+      LEFT JOIN modules m ON l.module_id = m.id
+      LEFT JOIN courses c ON m.course_id = c.id
+      WHERE t.id = $1
+    `;
+
+    const testResult = await query(testQuery, [id]);
+    if (testResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found.' });
+    }
+
+    const test = testResult.rows[0];
+
+    // Get attempts
+    const attemptsQuery = `
+      SELECT 
+        ta.*,
+        ROW_NUMBER() OVER (ORDER BY ta.created_at DESC) as attempt_number
+      FROM test_attempts ta
+      WHERE ta.test_id = $1 AND ta.user_id = $2
+      ORDER BY ta.created_at DESC
+    `;
+
+    const attemptsResult = await query(attemptsQuery, [id, userId]);
+    const attempts = attemptsResult.rows;
+
+    // Get last attempt
+    const lastAttempt = attempts.length > 0 ? attempts[0] : null;
+
+    // Calculate statistics
+    const totalAttempts = attempts.length;
+    const passedAttempts = attempts.filter(a => a.passed).length;
+    const bestScore = attempts.length > 0 ? Math.max(...attempts.map(a => a.score)) : 0;
+    const bestPercentage = attempts.length > 0 ? Math.max(...attempts.map(a => parseFloat(a.percentage))) : 0;
+
+    // Format attempts for table
+    const formattedAttempts = attempts.map((attempt, index) => ({
+      attemptNumber: attempt.attempt_number,
+      status: attempt.passed ? 'Зачёт' : 'Незачёт',
+      statusClass: attempt.passed ? 'passed' : 'failed',
+      score: attempt.score,
+      percentage: parseFloat(attempt.percentage).toFixed(2),
+      completedAt: attempt.completed_at,
+      passed: attempt.passed
+    }));
+
+    res.json({
+      test: {
+        id: test.id,
+        title: test.title,
+        description: test.description,
+        lesson_title: test.lesson_title,
+        module_title: test.module_title,
+        course_title: test.course_title,
+        passing_score: test.passing_score,
+        time_limit: test.time_limit
+      },
+      lastAttempt: lastAttempt ? {
+        id: lastAttempt.id,
+        score: lastAttempt.score,
+        percentage: parseFloat(lastAttempt.percentage).toFixed(2),
+        passed: lastAttempt.passed,
+        status: lastAttempt.passed ? 'Зачёт' : 'Незачёт',
+        statusClass: lastAttempt.passed ? 'passed' : 'failed',
+        completedAt: lastAttempt.completed_at
+      } : null,
+      statistics: {
+        totalAttempts,
+        passedAttempts,
+        failedAttempts: totalAttempts - passedAttempts,
+        bestScore,
+        bestPercentage: bestPercentage.toFixed(2),
+        successRate: totalAttempts > 0 ? ((passedAttempts / totalAttempts) * 100).toFixed(1) : 0
+      },
+      attempts: formattedAttempts
+    });
+  } catch (error) {
+    console.error('Error fetching detailed test attempts:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // Add question to test
 router.post('/:id/questions', [
   body('questionText').trim().isLength({ min: 5 }),

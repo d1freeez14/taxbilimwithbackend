@@ -240,7 +240,7 @@ npm test
 ## 🔒 Security Features
 
 - **JWT Authentication** - Secure token-based auth
-- **Role-based Access Control** - User permission management
+- **Role-based Access Control** - User permibili,ssion management
 - **Input Validation** - Request data sanitization
 - **Rate Limiting** - API abuse prevention
 - **CORS Protection** - Cross-origin request security

@@ -1,15 +1,16 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../lib/db');
-const { requireRole } = require('../middleware/auth');
+const { requireRole, auth } = require('../middleware/auth');
 const { formatModuleStatistics, getModuleSummaryText } = require('../lib/formatDuration');
 
 const router = express.Router();
 
 // Get modules for a course with statistics
-router.get('/course/:courseId', async (req, res) => {
+router.get('/course/:courseId', auth, async (req, res) => {
   try {
     const { courseId } = req.params;
+    const userId = req.user ? req.user.id : null;
     
     const modulesQuery = `
       SELECT 
@@ -19,7 +20,8 @@ router.get('/course/:courseId', async (req, res) => {
         COALESCE(m.total_duration, 0) as total_duration,
         COALESCE(m.duration_weeks, 1) as duration_weeks,
         COALESCE(test_stats.test_count, 0) as test_count,
-        COALESCE(test_stats.test_titles, '') as test_titles
+        COALESCE(test_stats.test_titles, '') as test_titles,
+        false as is_finished
       FROM modules m
       LEFT JOIN (
         SELECT 
@@ -36,14 +38,26 @@ router.get('/course/:courseId', async (req, res) => {
     
     const result = await query(modulesQuery, [courseId]);
     
-    // Format module statistics
-    const formattedModules = result.rows.map(module => ({
-      ...module,
-      statistics: formatModuleStatistics(module),
-      summaryText: getModuleSummaryText(module),
-      hasTests: parseInt(module.test_count) > 0,
-      testCount: parseInt(module.test_count),
-      testTitles: module.test_titles ? module.test_titles.split(', ') : []
+    // Format module statistics and add user-specific data
+    const formattedModules = await Promise.all(result.rows.map(async (module) => {
+      // Check if module is finished (if user is authenticated)
+      if (userId) {
+        const finishedQuery = `
+          SELECT 1 FROM module_progress 
+          WHERE user_id = $1 AND module_id = $2 AND completed = true
+        `;
+        const finishedResult = await query(finishedQuery, [userId, module.id]);
+        module.is_finished = finishedResult.rows.length > 0;
+      }
+
+      return {
+        ...module,
+        statistics: formatModuleStatistics(module),
+        summaryText: getModuleSummaryText(module),
+        hasTests: parseInt(module.test_count) > 0,
+        testCount: parseInt(module.test_count),
+        testTitles: module.test_titles ? module.test_titles.split(', ') : []
+      };
     }));
     
     res.json({ modules: formattedModules });
@@ -390,6 +404,86 @@ router.get('/:id/tests/summary', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting module test summary:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Mark module as completed
+router.post('/:id/complete', requireRole(['STUDENT', 'TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if module exists
+    const moduleCheckQuery = `
+      SELECT id FROM modules WHERE id = $1
+    `;
+    const moduleCheckResult = await query(moduleCheckQuery, [id]);
+    
+    if (moduleCheckResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Module not found.' });
+    }
+
+    // Insert or update module progress
+    const completeQuery = `
+      INSERT INTO module_progress (user_id, module_id, completed, completed_at)
+      VALUES ($1, $2, true, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_id, module_id) 
+      DO UPDATE SET 
+        completed = true,
+        completed_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+
+    const result = await query(completeQuery, [userId, id]);
+    
+    res.json({ 
+      message: 'Module marked as completed successfully.',
+      progress: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error completing module:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Mark module as incomplete
+router.post('/:id/incomplete', requireRole(['STUDENT', 'TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if module exists
+    const moduleCheckQuery = `
+      SELECT id FROM modules WHERE id = $1
+    `;
+    const moduleCheckResult = await query(moduleCheckQuery, [id]);
+    
+    if (moduleCheckResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Module not found.' });
+    }
+
+    // Update module progress to incomplete
+    const incompleteQuery = `
+      UPDATE module_progress 
+      SET completed = false, completed_at = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1 AND module_id = $2
+      RETURNING *
+    `;
+
+    const result = await query(incompleteQuery, [userId, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Module progress not found.' });
+    }
+    
+    res.json({ 
+      message: 'Module marked as incomplete successfully.',
+      progress: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error marking module as incomplete:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 });

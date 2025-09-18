@@ -31,6 +31,175 @@ Access the interactive Swagger documentation at: `http://localhost:5001/api-docs
 
 ## API Endpoints
 
+### Module Progress
+
+#### Mark Module as Completed
+```http
+POST /api/modules/:id/complete
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Response:**
+```json
+{
+  "message": "Module marked as completed successfully.",
+  "progress": {
+    "id": 1,
+    "user_id": 3,
+    "module_id": 1,
+    "completed": true,
+    "completed_at": "2025-09-18T18:26:26.419Z",
+    "created_at": "2025-09-18T18:26:26.419Z",
+    "updated_at": "2025-09-18T18:26:26.419Z"
+  }
+}
+```
+
+#### Mark Module as Incomplete
+```http
+POST /api/modules/:id/incomplete
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Response:**
+```json
+{
+  "message": "Module marked as incomplete successfully.",
+  "progress": {
+    "id": 1,
+    "user_id": 3,
+    "module_id": 1,
+    "completed": false,
+    "completed_at": null,
+    "created_at": "2025-09-18T18:26:26.419Z",
+    "updated_at": "2025-09-18T18:26:34.094Z"
+  }
+}
+```
+
+#### Get Modules with Progress Status
+```http
+GET /api/modules/course/:courseId
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "modules": [
+    {
+      "id": 1,
+      "title": "Модуль 1: Введение в налогообложение",
+      "order": 1,
+      "course_id": 1,
+      "lesson_count": 0,
+      "assignment_count": 0,
+      "total_duration": 0,
+      "duration_weeks": 1,
+      "test_count": "1",
+      "test_titles": "Тест по основам налогообложения",
+      "is_finished": true,
+      "statistics": {
+        "lessonCount": 0,
+        "assignmentCount": 0,
+        "totalDuration": 0,
+        "durationWeeks": 1,
+        "formattedDuration": "0 минут"
+      },
+      "summaryText": "0 видеоурока, 0 задания, 1 неделя",
+      "hasTests": true,
+      "testCount": 1,
+      "testTitles": ["Тест по основам налогообложения"]
+    }
+  ]
+}
+```
+
+### Test Attempts
+
+#### Submit Test Attempt
+```http
+POST /api/tests/:id/attempt
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "answers": [
+    {
+      "questionId": 1,
+      "answer": "Б) Обязательный платеж"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "attempt": {
+    "id": 1,
+    "user_id": 3,
+    "test_id": 1,
+    "score": 12,
+    "percentage": "100.00",
+    "passed": true,
+    "completed_at": "2025-09-18T18:28:25.434Z"
+  },
+  "score": 12,
+  "maxScore": 12,
+  "percentage": 100,
+  "passed": true
+}
+```
+
+#### Get Test Attempts (Detailed)
+```http
+GET /api/tests/:id/attempts/detailed
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "test": {
+    "id": 1,
+    "title": "Тест по основам налогообложения",
+    "passing_score": 70,
+    "time_limit": 30
+  },
+  "lastAttempt": {
+    "id": 3,
+    "score": 4,
+    "percentage": "33.00",
+    "passed": false,
+    "status": "Незачёт",
+    "statusClass": "failed",
+    "completedAt": "2025-09-18T18:28:41.300Z"
+  },
+  "statistics": {
+    "totalAttempts": 3,
+    "passedAttempts": 1,
+    "failedAttempts": 2,
+    "bestScore": 12,
+    "bestPercentage": "100.00",
+    "successRate": "33.3"
+  },
+  "attempts": [
+    {
+      "attemptNumber": "1",
+      "status": "Незачёт",
+      "statusClass": "failed",
+      "score": 4,
+      "percentage": "33.00",
+      "completedAt": "2025-09-18T18:28:41.300Z",
+      "passed": false
+    }
+  ]
+}
+```
+
 ### Authentication
 
 #### Register User
