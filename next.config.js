@@ -6,14 +6,25 @@ const nextConfig = {
     ]
   },
   env: {
-    NEXT_PUBLIC_API_URL: 'http://localhost:5001'
+    NEXT_PUBLIC_API_URL: 'http://89.219.32.91:5001'
   },
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
-        ignored: ['/root', '/tmp', '/var', '**/node_modules']
+        ignored: [
+          '**/root/**',
+          '**/tmp/**',
+          '**/var/**',
+          '**/proc/**',
+          '**/sys/**',
+          '**/dev/**',
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/.next/**'
+        ],
+        followSymlinks: false
       }
     }
     return config

@@ -1,3 +1,14 @@
 {
-  "ignore_dirs": ["/root", "/tmp", "/var"]
+  "ignore_dirs": [
+    "/root",
+    "/tmp", 
+    "/var",
+    "/proc",
+    "/sys",
+    "/dev",
+    "node_modules",
+    ".git",
+    ".next"
+  ],
+  "settle": 20
 }
