@@ -1,6 +1,6 @@
 import {ISession} from "@/types/user";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://89.219.32.91:5001';
 
 export const AuthService = {
   login: async (email: string, password: string) => {

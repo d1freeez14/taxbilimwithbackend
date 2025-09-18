@@ -1,6 +1,6 @@
 import {AttemptsResponse, ResultsResponse, SubmitAnswer, SubmitResponse, TestPayload} from "@/types/test";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://89.219.32.91:5001';
 
 export const TestService = {
   // GET /api/tests/lesson/:lessonId

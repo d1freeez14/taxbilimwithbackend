@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://89.219.32.91:5001';
 
 export const ProgressService = {
   getCourseProgressById: async (id:string,token: string) => {

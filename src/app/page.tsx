@@ -36,8 +36,8 @@ export default function HomePage() {
           </div>
           
           <div className="mt-8 text-sm text-gray-500">
-            <p>API Backend: <a href="http://localhost:5001" className="text-blue-600 hover:underline">http://localhost:5001</a></p>
-            <p>API Docs: <a href="http://localhost:5001/api-docs" className="text-blue-600 hover:underline">http://localhost:5001/api-docs</a></p>
+            <p>API Backend: <a href="http://89.219.32.91:5001" className="text-blue-600 hover:underline">http://89.219.32.91:5001</a></p>
+            <p>API Docs: <a href="http://89.219.32.91:5001/api-docs" className="text-blue-600 hover:underline">http://89.219.32.91:5001/api-docs</a></p>
           </div>
         </div>
       </div>
