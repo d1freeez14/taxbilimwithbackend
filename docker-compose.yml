@@ -63,9 +63,11 @@ services:
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_API_URL: http://localhost:5001
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "300"
+      WATCHPACK_POLLING: "true"
+      WATCHPACK_IGNORED: "/root"
     ports:
       - "3001:3000"
     depends_on:
@@ -78,12 +80,11 @@ services:
       - frontend_next_cache:/app/.next
     networks: [taxbilim]
     restart: unless-stopped
-    user: "0"  # root только для chown на volume-папки
+    user: "1001:1001"  # запуск под пользователем nodejs
     command: >
-      sh -lc '
+      sh -c '
         mkdir -p /app/.next /app/node_modules &&
-        chown -R 1001:1001 /app/.next /app/node_modules &&
-        exec su -s /bin/sh nodejs -c "npm run dev -- -H 0.0.0.0 -p 3000"
+        npm run dev -- -H 0.0.0.0 -p 3000
       '
 
 volumes:
