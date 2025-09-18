@@ -1,7 +1,7 @@
 import {Course, CourseModule, Enrollment, Lesson} from "@/types/course";
 import {Certificate} from "@/types/certificate";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://89.219.32.91:5001';
+const BACKEND_URL = (typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) || 'http://89.219.32.91:5001';
 
 export const CourseService = {
   getAllCourses: async (token: string) => {
