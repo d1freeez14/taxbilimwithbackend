@@ -114,7 +114,7 @@ const CoursePageById = () => {
           <div className={'flex flex-col gap-6'}>
             <h2 className={'text-black text-[24px] font-semibold'}>Чему вы научитесь?</h2>
             <div className={'flex flex-wrap gap-x-5 gap-y-4 w-full justify-between'}>
-              {course.what_you_learn.map((item, index) => (
+              {(course.what_you_learn || []).map((item, index) => (
                 <div key={index} className={'flex items-center gap-2.5 w-[47.5%]'}>
                   <Icon icon={'teenyicons:tick-circle-solid'} className={'text-[#EE7A67] w-[24px] h-[24px]'}/>
                   <p className={'text-black text-[14px]'}>{item}</p>
@@ -176,30 +176,12 @@ const CoursePageById = () => {
               Что входит в курс:
             </h2>
             <div className={'flex flex-col gap-3'}>
-              <div className={'flex items-center gap-2'}>
-                <Icon icon={'solar:document-text-outline'} className={'text-[#383F45] w-6 h-6'}/>
-                <p className={'text-[16px] text-[#383F45] font-medium'}>{course.features[0]}</p>
-              </div>
-              <div className={'flex items-center gap-2'}>
-                <Icon icon={'hugeicons:computer-video-call'} className={'text-[#383F45] w-6 h-6'}/>
-                <p className={'text-[16px] text-[#383F45] font-medium'}>{course.features[1]}</p>
-              </div>
-              <div className={'flex items-center gap-2'}>
-                <Icon icon={'icon-park-outline:notebook-and-pen'} className={'text-[#383F45] w-6 h-6'}/>
-                <p className={'text-[16px] text-[#383F45] font-medium'}>{course.features[2]}</p>
-              </div>
-              <div className={'flex items-center gap-2'}>
-                <Icon icon={'solar:download-outline'} className={'text-[#383F45] w-6 h-6'}/>
-                <p className={'text-[16px] text-[#383F45] font-medium'}>{course.features[3]}</p>
-              </div>
-              <div className={'flex items-center gap-2'}>
-                <Icon icon={'hugeicons:infinity-circle'} className={'text-[#383F45] w-6 h-6'}/>
-                <p className={'text-[16px] text-[#383F45] font-medium'}>{course.features[4]}</p>
-              </div>
-              <div className={'flex items-center gap-2'}>
-                <Icon icon={'tabler:certificate'} className={'text-[#383F45] w-6 h-6'}/>
-                <p className={'text-[16px] text-[#383F45] font-medium'}>{course.features[5]}</p>
-              </div>
+              {(course.features || []).map((feature, index) => (
+                <div key={index} className={'flex items-center gap-2'}>
+                  <Icon icon={'solar:document-text-outline'} className={'text-[#383F45] w-6 h-6'}/>
+                  <p className={'text-[16px] text-[#383F45] font-medium'}>{feature}</p>
+                </div>
+              ))}
             </div>
           </div>
           <hr className={'border-t border-[#E5E7EA]'}/>

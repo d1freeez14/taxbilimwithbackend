@@ -5,6 +5,7 @@ import {ToastProvider} from '@/components/providers/toaster-provider'
 import {ConfettiProvider} from '@/components/providers/confetti-provider'
 import localfont from 'next/font/local';
 import Providers from "@/app/providers";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const inter = Inter({subsets: ['latin']})
 const gilroy = localfont({
@@ -70,9 +71,11 @@ export default function RootLayout({children}: { children: React.ReactNode }) {
     // <ClerkProvider>
     <html lang="en">
     <body className={gilroy.className}>
-    <ConfettiProvider/>
-    <ToastProvider/>
-    <Providers>{children}</Providers>
+    <ErrorBoundary>
+      <ConfettiProvider/>
+      <ToastProvider/>
+      <Providers>{children}</Providers>
+    </ErrorBoundary>
     </body>
     </html>
     // </ClerkProvider>

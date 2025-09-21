@@ -32,7 +32,7 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
     setIsLoading(true);
     try {
       const method = isFavorite ? 'DELETE' : 'POST';
-      const response = await fetch(`http://localhost:5001/api/favorites/${course.id}`, {
+      const response = await fetch(`${(typeof window !== 'undefined' ? (globalThis as any).process?.env?.NEXT_PUBLIC_API_URL : undefined) || 'http://89.219.32.91:5001'}/api/favorites/${course.id}`, {
         method,
         headers: {
           'Authorization': `Bearer ${token}`

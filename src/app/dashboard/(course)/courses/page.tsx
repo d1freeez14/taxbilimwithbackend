@@ -131,12 +131,21 @@ const AllCoursesPage = () => {
       </div>
       <div className={'flex flex-wrap gap-6'}>
         {isLoading ? (
-          <div className="w-full text-center py-10">
-            <p className="text-gray-600">Loading courses...</p>
+          <div className="w-full flex justify-center py-10">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full border-2 border-gray-300 border-t-[#EE7A67] w-8 h-8" />
+              <p className="text-gray-600">Загрузка курсов...</p>
+            </div>
           </div>
         ) : courses.length === 0 ? (
-          <div className="w-full text-center py-10">
-            <p className="text-gray-600">No courses found</p>
+          <div className="w-full flex justify-center py-10">
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-gray-50 rounded-full p-4">
+                <Icon icon="heroicons:academic-cap" className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Курсы не найдены</h3>
+              <p className="text-gray-600">Попробуйте изменить параметры поиска</p>
+            </div>
           </div>
         ) : (
           courses

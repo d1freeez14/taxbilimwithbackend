@@ -147,14 +147,15 @@ export interface Course {
   description: string;
   image_src: string;
   price: number | string;
-  bg: string;
+  bg?: string;
   is_published: boolean;
   is_sales_leader: boolean;
   is_recorded: boolean;
   is_favorite?: boolean;
+  is_finished?: boolean;
 
-  features: string[];
-  what_you_learn: string[];
+  features?: string[];
+  what_you_learn?: string[];
 
   author_id: number;
   author_name: string;
