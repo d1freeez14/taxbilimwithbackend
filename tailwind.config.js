@@ -1,4 +1,4 @@
-const { withUt } = require("uploadthing/tw");
+const {withUt} = require("uploadthing/tw");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = withUt({
@@ -8,7 +8,7 @@ module.exports = withUt({
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   theme: {
     container: {
       center: true,
@@ -60,18 +60,33 @@ module.exports = withUt({
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {height: 0},
+          to: {height: "var(--radix-accordion-content-height)"},
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          from: {height: "var(--radix-accordion-content-height)"},
+          to: {height: 0},
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      boxShadow: {
+        'inner-white': 'inset 0 -1.5px 0 0 rgba(255,255,255,0.32), inset 0 0.5px 0 0 rgba(255,255,255,0.32)',
+        'custom-multi': `
+          15px 13px 44px 0px #0000000A,
+          61px 51px 79px 0px #00000008,
+          137px 115px 107px 0px #00000005,
+          243px 204px 127px 0px #00000003,
+          380px 319px 139px 0px #00000000
+        `,
+      },
+      backgroundImage: {
+        'gradient-tb': 'linear-gradient(to left, #F05035, #F2C117)',
+        'gradient-gb': 'linear-gradient(129.29deg, #31D281 0%, #00C4D8 72.5%)',
+
+}
     },
   },
   plugins: [require("tailwindcss-animate")],

@@ -70,7 +70,6 @@ export default function RootLayout({children}: { children: React.ReactNode }) {
     // <ClerkProvider>
     <html lang="en">
     <body className={gilroy.className}>
-    <ConfettiProvider/>
     <ToastProvider/>
     <Providers>{children}</Providers>
     </body>
