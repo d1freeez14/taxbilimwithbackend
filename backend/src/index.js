@@ -22,6 +22,10 @@ const favoriteRoutes = require('./routes/favorites');
 const categoryRoutes = require('./routes/categories');
 const progressRoutes = require('./routes/progress');
 const testRoutes = require('./routes/tests');
+const teacherStatsRoutes = require('./routes/teacher-stats');
+const teacherStudentsRoutes = require('./routes/teacher-students');
+const teacherCoursesRoutes = require('./routes/teacher-courses');
+const salesRoutes = require('./routes/sales');
 
 const errorHandler = require('./middleware/errorHandler');
 const authMiddleware = require('./middleware/auth');
@@ -143,6 +147,14 @@ app.use('/api/favorites', authMiddleware.auth, favoriteRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/progress', authMiddleware.auth, progressRoutes);
 app.use('/api/tests', authMiddleware.auth, testRoutes);
+
+// Teacher routes
+app.use('/api/teacher/stats', teacherStatsRoutes);
+app.use('/api/teacher/students', teacherStudentsRoutes);
+app.use('/api/teacher/courses', teacherCoursesRoutes);
+
+// Sales routes
+app.use('/api/sales', salesRoutes);
 
 // Public certificate routes (no auth required) - MUST be before protected routes
 app.use('/api/certificates', publicCertificateRoutes);
