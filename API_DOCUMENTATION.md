@@ -1,216 +1,37 @@
-# TaxBilim API Documentation
+# TaxBilim LMS API Documentation
 
 ## Overview
-
-This document provides comprehensive information about the TaxBilim Learning Management System API. The API is built with Node.js, Express, and PostgreSQL, providing endpoints for user authentication, course management, enrollments, progress tracking, lesson completion, module completion, and test functionality.
+TaxBilim LMS - это система управления обучением для налогового консультирования с полным набором API для учителей, студентов и администраторов.
 
 ## Base URL
-
-- **Development**: `http://localhost:5001`
-- **Production**: `https://api.taxbilim.com`
+- Development: `http://localhost:5001/api`
+- Production: `http://89.219.32.91:5001/api`
 
 ## Authentication
-
-The API uses JWT (JSON Web Tokens) for authentication. Most endpoints require a valid JWT token in the Authorization header.
-
-### Getting a Token
-
-1. **Register**: `POST /api/auth/register`
-2. **Login**: `POST /api/auth/login`
-
-### Using the Token
-
-Include the token in the Authorization header:
+Все защищенные эндпоинты требуют JWT токен в заголовке:
 ```
 Authorization: Bearer <your-jwt-token>
 ```
 
-## Interactive Documentation
+## User Roles
+- `ADMIN` - Администратор системы
+- `TEACHER` - Учитель/Преподаватель
+- `STUDENT` - Студент
 
-Access the interactive Swagger documentation at: `http://localhost:5001/api-docs`
+---
 
-## API Endpoints
+## 🔐 Authentication API
 
-### Module Progress
+### POST /api/auth/register
+Регистрация нового пользователя
 
-#### Mark Module as Completed
-```http
-POST /api/modules/:id/complete
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-**Response:**
+**Request Body:**
 ```json
 {
-  "message": "Module marked as completed successfully.",
-  "progress": {
-    "id": 1,
-    "user_id": 3,
-    "module_id": 1,
-    "completed": true,
-    "completed_at": "2025-09-18T18:26:26.419Z",
-    "created_at": "2025-09-18T18:26:26.419Z",
-    "updated_at": "2025-09-18T18:26:26.419Z"
-  }
-}
-```
-
-#### Mark Module as Incomplete
-```http
-POST /api/modules/:id/incomplete
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-**Response:**
-```json
-{
-  "message": "Module marked as incomplete successfully.",
-  "progress": {
-    "id": 1,
-    "user_id": 3,
-    "module_id": 1,
-    "completed": false,
-    "completed_at": null,
-    "created_at": "2025-09-18T18:26:26.419Z",
-    "updated_at": "2025-09-18T18:26:34.094Z"
-  }
-}
-```
-
-#### Get Modules with Progress Status
-```http
-GET /api/modules/course/:courseId
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "modules": [
-    {
-      "id": 1,
-      "title": "Модуль 1: Введение в налогообложение",
-      "order": 1,
-      "course_id": 1,
-      "lesson_count": 0,
-      "assignment_count": 0,
-      "total_duration": 0,
-      "duration_weeks": 1,
-      "test_count": "1",
-      "test_titles": "Тест по основам налогообложения",
-      "is_finished": true,
-      "statistics": {
-        "lessonCount": 0,
-        "assignmentCount": 0,
-        "totalDuration": 0,
-        "durationWeeks": 1,
-        "formattedDuration": "0 минут"
-      },
-      "summaryText": "0 видеоурока, 0 задания, 1 неделя",
-      "hasTests": true,
-      "testCount": 1,
-      "testTitles": ["Тест по основам налогообложения"]
-    }
-  ]
-}
-```
-
-### Test Attempts
-
-#### Submit Test Attempt
-```http
-POST /api/tests/:id/attempt
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "answers": [
-    {
-      "questionId": 1,
-      "answer": "Б) Обязательный платеж"
-    }
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "attempt": {
-    "id": 1,
-    "user_id": 3,
-    "test_id": 1,
-    "score": 12,
-    "percentage": "100.00",
-    "passed": true,
-    "completed_at": "2025-09-18T18:28:25.434Z"
-  },
-  "score": 12,
-  "maxScore": 12,
-  "percentage": 100,
-  "passed": true
-}
-```
-
-#### Get Test Attempts (Detailed)
-```http
-GET /api/tests/:id/attempts/detailed
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "test": {
-    "id": 1,
-    "title": "Тест по основам налогообложения",
-    "passing_score": 70,
-    "time_limit": 30
-  },
-  "lastAttempt": {
-    "id": 3,
-    "score": 4,
-    "percentage": "33.00",
-    "passed": false,
-    "status": "Незачёт",
-    "statusClass": "failed",
-    "completedAt": "2025-09-18T18:28:41.300Z"
-  },
-  "statistics": {
-    "totalAttempts": 3,
-    "passedAttempts": 1,
-    "failedAttempts": 2,
-    "bestScore": 12,
-    "bestPercentage": "100.00",
-    "successRate": "33.3"
-  },
-  "attempts": [
-    {
-      "attemptNumber": "1",
-      "status": "Незачёт",
-      "statusClass": "failed",
-      "score": 4,
-      "percentage": "33.00",
-      "completedAt": "2025-09-18T18:28:41.300Z",
-      "passed": false
-    }
-  ]
-}
-```
-
-### Authentication
-
-#### Register User
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "email": "user@taxbilim.com",
+  "name": "John Doe",
+  "email": "john@example.com",
   "password": "password123",
-  "name": "John Doe"
+  "role": "STUDENT"
 }
 ```
 
@@ -220,982 +41,421 @@ Content-Type: application/json
   "message": "User registered successfully",
   "user": {
     "id": 1,
-    "email": "user@taxbilim.com",
     "name": "John Doe",
-    "role": "STUDENT",
-    "avatar": null,
-    "created_at": "2025-08-12T21:50:26.161Z"
+    "email": "john@example.com",
+    "role": "STUDENT"
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-#### Login User
-```http
-POST /api/auth/login
-Content-Type: application/json
+### POST /api/auth/login
+Вход в систему
 
+**Request Body:**
+```json
 {
-  "email": "user@taxbilim.com",
+  "email": "john@example.com",
   "password": "password123"
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "Login successful",
-  "user": {
-    "id": 1,
-    "email": "user@taxbilim.com",
-    "name": "John Doe",
-    "role": "STUDENT",
-    "avatar": null,
-    "created_at": "2025-08-12T21:50:26.161Z"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+---
 
-#### Get Current User
-```http
-GET /api/auth/me
-Authorization: Bearer <token>
-```
+## 📚 Courses API
 
-### Courses
-
-#### Get All Courses
-```http
-GET /api/courses
-```
+### GET /api/courses
+Получить список всех опубликованных курсов
 
 **Query Parameters:**
-- `limit` (optional): Number of courses to return (default: 10)
-- `page` (optional): Page number (default: 1)
-- `search` (optional): Search term for course title/description
-- `category` (optional): Filter by category ID
+- `page` (optional): Номер страницы (default: 1)
+- `limit` (optional): Количество курсов на странице (default: 10)
+- `search` (optional): Поиск по названию или описанию
+- `category` (optional): Фильтр по категории
 
-**Response:**
+### POST /api/courses
+Создание нового курса (TEACHER/ADMIN only)
+
+**Request Body:**
 ```json
 {
-  "courses": [
-    {
-      "id": 1,
-      "title": "Основы налогообложения",
-      "description": "Комплексный курс по основам налогообложения...",
-      "image_src": "/coursePlaceholder.png",
-      "price": "25990.00",
-      "bg": "white",
-      "is_published": true,
-      "is_sales_leader": true,
-      "is_recorded": true,
-      "features": ["5 Модулей", "78 видеоуроков", "7 статей"],
-      "what_you_learn": ["Понимание основных принципов налогообложения"],
-      "author_name": "Лана Б.",
-      "author_avatar": "/avatars.png",
-      "enrollment_count": "1",
-      "review_count": "1",
-      "is_favorite": false
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 18,
-    "pages": 2
-  }
+  "title": "Основы налогообложения",
+  "description": "Комплексный курс по основам налогообложения",
+  "price": 25000,
+  "features": ["Практические примеры", "Актуальное законодательство"],
+  "whatYouLearn": ["Виды налогов", "Налоговые льготы"],
+  "category_id": 1,
+  "access_duration": "lifetime",
+  "video_url": "https://youtube.com/watch?v=example"
 }
 ```
 
-#### Get Course by ID
-```http
-GET /api/courses/:id
-```
-
 **Response:**
 ```json
 {
+  "success": true,
+  "message": "Course created successfully",
   "course": {
     "id": 1,
     "title": "Основы налогообложения",
-    "description": "Комплексный курс по основам налогообложения...",
-    "image_src": "/coursePlaceholder.png",
-    "price": "25990.00",
-    "bg": "white",
-    "is_published": true,
-    "features": ["5 Модулей", "78 видеоуроков", "7 статей"],
-    "what_you_learn": ["Понимание основных принципов налогообложения"],
-    "author_name": "Лана Б.",
-    "author_avatar": "/avatars.png",
-    "author_bio": "Expert tax consultant with 10+ years of experience",
-    "enrollment_count": "1",
-    "review_count": "1",
-    "modules": [
-      {
-        "id": 1,
-        "title": "Модуль 1: Введение в налогообложение",
-        "order": 1,
-        "lessons": [
-          {
-            "id": 1,
-            "title": "Урок 1: Что такое налоги",
-            "duration": 15,
-            "order": 1
-          }
-        ]
-      }
-    ],
-    "reviews": {
-      "statistics": {
-        "total": 1,
-        "average": 5.0,
-        "distribution": {
-          "five_star": 1,
-          "four_star": 0,
-          "three_star": 0,
-          "two_star": 0,
-          "one_star": 0
-        }
-      },
-      "recent_reviews": [
-        {
-          "id": 1,
-          "user_id": 3,
-          "course_id": 1,
-          "rating": 5,
-          "comment": "Отличный курс! Очень понятно объясняют сложные темы.",
-          "created_at": "2025-08-12T21:51:54.758Z",
-          "user_name": "Student User",
-          "user_avatar": null
-        }
-      ]
+    "description": "Комплексный курс по основам налогообложения",
+    "price": 25000,
+    "author_id": 2,
+    "category_id": 1,
+    "access_duration": "lifetime",
+    "video_url": "https://youtube.com/watch?v=example",
+    "is_published": false,
+    "author": {
+      "id": 2,
+      "name": "Teacher User",
+      "avatar": null
     }
   }
 }
 ```
 
-#### Create Course (TEACHER/ADMIN only)
-```http
-POST /api/courses
-Authorization: Bearer <token>
-Content-Type: application/json
+### GET /api/courses/:id
+Получить детальную информацию о курсе
 
-{
-  "title": "New Course",
-  "description": "Course description",
-  "price": 29990.00,
-  "features": ["Feature 1", "Feature 2"],
-  "what_you_learn": ["Learning 1", "Learning 2"]
-}
-```
+---
 
-### Lessons
+## 👨‍🏫 Teacher Dashboard API
 
-#### Get All Lessons (with progress tracking)
-```http
-GET /api/lessons?userId={userId}
-Authorization: Bearer <token>
-```
-
-**Parameters:**
-- `userId` (optional) - User ID to get progress information
+### GET /api/teacher/stats/dashboard-stats
+Получить общую статистику учителя
 
 **Response:**
 ```json
 {
-  "lessons": [
+  "success": true,
+  "stats": {
+    "total_courses": 5,
+    "published_courses": 3,
+    "draft_courses": 2,
+    "total_enrollments": 150,
+    "completed_enrollments": 45,
+    "active_enrollments": 105,
+    "total_revenue": 15000.00,
+    "average_rating": 4.5,
+    "total_reviews": 30
+  },
+  "monthly_stats": [
     {
-      "id": 1,
-      "title": "Урок 1: Что такое налоги",
-      "lesson_type": "VIDEO",
-      "is_finished": true,
-      "is_unlocked": false,
-      "access": {
-        "isAccessible": true,
-        "isLocked": false,
-        "type": "VIDEO",
-        "label": "Видеоурок",
-        "icon": "play-circle"
-      },
-      "navigationUrl": "/lesson/1/video"
-    }
-  ]
-}
-```
-
-#### Get Lessons by Module (with progress tracking)
-```http
-GET /api/lessons/module/:moduleId
-Authorization: Bearer <token>
-```
-
-#### Get Lesson by ID (with completion status)
-```http
-GET /api/lessons/:id
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "lesson": {
-    "id": 1,
-    "title": "Урок 1: Что такое налоги",
-    "content": "В этом уроке мы изучим основные понятия налогообложения...",
-    "video_url": "https://example.com/video.mp4",
-    "order": 1,
-    "module_id": 1,
-    "duration": 15,
-    "lesson_type": "VIDEO",
-    "is_finished": true,
-    "is_unlocked": false,
-    "access": {
-      "isAccessible": true,
-      "isLocked": false,
-      "type": "VIDEO",
-      "label": "Видеоурок",
-      "icon": "play-circle"
-    },
-    "navigationUrl": "/lesson/1/video"
-  }
-}
-```
-
-#### Mark Lesson as Completed
-```http
-POST /api/lessons/:id/complete
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "message": "Lesson marked as completed.",
-  "progress": {
-    "id": 1,
-    "user_id": 3,
-    "lesson_id": 1,
-    "completed": true,
-    "completed_at": "2025-09-14T19:27:47.987Z",
-    "created_at": "2025-09-14T19:27:47.987Z",
-    "updated_at": "2025-09-14T19:27:47.987Z"
-  }
-}
-```
-
-#### Mark Lesson as Incomplete
-```http
-POST /api/lessons/:id/incomplete
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "message": "Lesson marked as incomplete.",
-  "progress": {
-    "id": 1,
-    "user_id": 3,
-    "lesson_id": 1,
-    "completed": false,
-    "completed_at": null,
-    "created_at": "2025-09-14T19:27:47.987Z",
-    "updated_at": "2025-09-14T19:27:54.136Z"
-  }
-}
-```
-
-#### Mark Module as Completed
-```http
-POST /api/lessons/module/:moduleId/complete
-Authorization: Bearer <token>
-```
-
-**Note:** This endpoint checks if all lessons in the module are completed before allowing module completion.
-
-**Response (Success):**
-```json
-{
-  "message": "Module completed successfully!",
-  "module_id": 1,
-  "completed_lessons": 3,
-  "completed_at": "2025-08-18T16:45:00.000Z"
-}
-```
-
-**Response (Failure - incomplete lessons):**
-```json
-{
-  "message": "Cannot complete module. Some lessons are not finished.",
-  "incomplete_lessons": [
-    {
-      "lesson_id": 2,
-      "lesson_title": "Урок 2: Функции налогов",
-      "completed": false
-    }
-  ]
-}
-```
-
-#### Get Lessons for Module
-```http
-GET /api/lessons/module/:moduleId
-Authorization: Bearer <token>
-```
-
-### Tests
-
-#### Get Test Questions for Lesson
-```http
-GET /api/tests/lesson/:lessonId
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "test": {
-    "test_id": 1,
-    "test_title": "Тест по основам налогообложения",
-    "description": "Проверьте свои знания по основам налогообложения",
-    "time_limit": 30,
-    "passing_score": 70,
-    "questions": [
-      {
-        "question_id": 1,
-        "question_text": "Что такое налог?",
-        "question_type": "multiple_choice",
-        "options": [
-          "A) Добровольный взнос",
-          "Б) Обязательный платеж",
-          "В) Подарок государству",
-          "Г) Благотворительность"
-        ],
-        "points": 2
-      }
-    ],
-    "previous_attempt": {
-      "attempt_id": 1,
-      "score": 8,
-      "percentage": 66.67,
-      "passed": false,
-      "completed_at": "2025-08-18T16:30:00.000Z"
-    }
-  }
-}
-```
-
-#### Submit Test Answers
-```http
-POST /api/tests/lesson/:lessonId/submit
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "answers": [
-    {
-      "question_id": 1,
-      "selected_answer": "Б) Обязательный платеж"
-    },
-    {
-      "question_id": 2,
-      "selected_answer": "Б) Фискальная"
-    }
-  ]
-}
-```
-
-**Response (Passed):**
-```json
-{
-  "message": "Test passed!",
-  "attempt_id": 2,
-  "score": 10,
-  "total_possible": 12,
-  "percentage": 83.33,
-  "passed": true,
-  "answers": [
-    {
-      "question_id": 1,
-      "selected_answer": "Б) Обязательный платеж",
-      "correct_answer": "Б) Обязательный платеж",
-      "is_correct": true,
-      "points": 2
-    },
-    {
-      "question_id": 2,
-      "selected_answer": "Б) Фискальная",
-      "correct_answer": "Б) Фискальная",
-      "is_correct": true,
-      "points": 2
-    }
-  ]
-}
-```
-
-**Response (Failed):**
-```json
-{
-  "message": "Test failed. Try again.",
-  "attempt_id": 2,
-  "score": 6,
-  "total_possible": 12,
-  "percentage": 50.00,
-  "passed": false,
-  "answers": [...]
-}
-```
-
-#### Get Test Results
-```http
-GET /api/tests/results/:testId
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "attempts": [
-    {
-      "attempt_id": 1,
-      "score": 8,
-      "percentage": 66.67,
-      "passed": false,
-      "completed_at": "2025-08-18T16:30:00.000Z",
-      "test_title": "Тест по основам налогообложения",
-      "passing_score": 70
+      "month": "2024-10-01T00:00:00.000Z",
+      "enrollments": 25,
+      "revenue": 2500.00
     }
   ],
-  "total_attempts": 1
-}
-```
-
-#### Create Test (TEACHER/ADMIN only)
-```http
-POST /api/tests
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "lessonId": 3,
-  "title": "Test Title",
-  "description": "Test description",
-  "timeLimit": 30,
-  "passingScore": 70,
-  "questions": [
+  "top_courses": [
     {
-      "question_text": "What is a tax?",
-      "question_type": "multiple_choice",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correct_answer": "Option B",
-      "points": 2
+      "id": 1,
+      "title": "Course Title",
+      "price": 500.00,
+      "enrollments": 50,
+      "revenue": 25000.00,
+      "rating": 4.8,
+      "reviews_count": 15
     }
   ]
 }
 ```
 
-### Enrollments
+### GET /api/teacher/stats/dashboard-stats/filtered
+Получить статистику с фильтрами
 
-#### Enroll in Course
-```http
-POST /api/enrollments
-Authorization: Bearer <token>
-Content-Type: application/json
+**Query Parameters:**
+- `start_date` (optional): ISO date string
+- `end_date` (optional): ISO date string  
+- `course_id` (optional): Course ID
+- `category_id` (optional): Category ID
 
-{
-  "courseId": 1
-}
-```
+---
 
-#### Get User Enrollments
-```http
-GET /api/enrollments/my-enrollments
-Authorization: Bearer <token>
-```
+## 👥 Students Management API
+
+### GET /api/teacher/students/students
+Получить список всех учеников с фильтрами
+
+**Query Parameters:**
+- `course_id` (optional): Filter by course
+- `search` (optional): Search by name or email
+- `status` (optional): 'completed' or 'active'
+- `enrollment_date_from` (optional): ISO date string
+- `enrollment_date_to` (optional): ISO date string
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 20)
 
 **Response:**
 ```json
 {
-  "enrollments": [
+  "success": true,
+  "students": [
     {
       "id": 1,
-      "user_id": 1,
-      "course_id": 1,
-      "enrolled_at": "2025-08-12T22:00:00.000Z",
-      "completed_at": null,
-      "course_title": "Основы налогообложения",
-      "course_description": "Комплексный курс по основам налогообложения...",
-      "course_image_src": "/coursePlaceholder.png",
-      "author_name": "Лана Б.",
-      "progress_percentage": 33
-    }
-  ]
-}
-```
-
-### Progress
-
-#### Update Lesson Progress
-```http
-POST /api/progress
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "lessonId": 1,
-  "completed": true
-}
-```
-
-#### Get User Progress
-```http
-GET /api/progress
-Authorization: Bearer <token>
-```
-
-#### Get Course Progress
-```http
-GET /api/progress/course/:courseId
-Authorization: Bearer <token>
-```
-
-### Reviews
-
-#### Check if User Can Leave Review
-```http
-GET /api/reviews/can-review/:courseId
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "canReview": true,
-  "hasExistingReview": false,
-  "progressPercentage": 85,
-  "completedLessons": 17,
-  "totalLessons": 20,
-  "message": "You can leave a review"
-}
-```
-
-**Note:** User can only leave a review after completing at least 80% of the course.
-
-#### Create Review
-```http
-POST /api/reviews
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "courseId": 1,
-  "rating": 5,
-  "comment": "Excellent course!"
-}
-```
-
-**Response:**
-```json
-{
-  "review": {
-    "id": 1,
-    "user_id": 1,
-    "course_id": 1,
-    "rating": 5,
-    "comment": "Excellent course!",
-    "created_at": "2025-08-18T16:45:00.000Z"
-  },
-  "message": "Review submitted successfully!"
-}
-```
-
-#### Get Course Reviews
-```http
-GET /api/reviews/course/:courseId
-```
-
-**Response:**
-```json
-{
-  "reviews": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "course_id": 1,
-      "rating": 5,
-      "comment": "Excellent course!",
-      "created_at": "2025-08-18T16:45:00.000Z",
-      "user_name": "John Doe",
-      "user_avatar": "/avatars.png"
+      "name": "Student Name",
+      "email": "student@example.com",
+      "avatar": "avatar_url",
+      "user_created_at": "2024-01-01T00:00:00.000Z",
+      "total_enrollments": 3,
+      "completed_courses": 1,
+      "last_enrollment_date": "2024-10-01T00:00:00.000Z",
+      "total_spent": 1500.00,
+      "average_rating": 4.5,
+      "courses": [
+        {
+          "id": 1,
+          "title": "Course Title",
+          "price": 500.00,
+          "enrolled_at": "2024-10-01T00:00:00.000Z",
+          "completed_at": null,
+          "status": "active"
+        }
+      ]
     }
   ],
   "pagination": {
     "page": 1,
-    "limit": 10,
-    "total": 1,
+    "limit": 20,
+    "total": 100,
+    "pages": 5
+  }
+}
+```
+
+### GET /api/teacher/students/students/:studentId
+Получить детальную информацию о студенте
+
+---
+
+## 📖 Teacher Courses API
+
+### GET /api/teacher/courses/my-courses
+Получить курсы учителя с полной информацией
+
+**Query Parameters:**
+- `status` (optional): 'published' or 'draft'
+- `search` (optional): Search by title or description
+- `category_id` (optional): Filter by category
+- `page` (optional): Page number
+- `limit` (optional): Items per page
+
+**Response:**
+```json
+{
+  "success": true,
+  "courses": [
+    {
+      "id": 1,
+      "title": "Course Title",
+      "description": "Course description",
+      "price": 500.00,
+      "image_src": "image_url",
+      "is_published": true,
+      "enrollment_count": 50,
+      "completed_enrollments": 15,
+      "review_count": 10,
+      "average_rating": 4.5,
+      "total_revenue": 25000.00,
+      "module_count": 5,
+      "lesson_count": 20,
+      "total_duration": 1200,
+      "completion_rate": 30
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 10,
     "pages": 1
   }
 }
 ```
 
-#### Get User's Review for Course
-```http
-GET /api/reviews/my-review/:courseId
-Authorization: Bearer <token>
-```
+### GET /api/teacher/courses/my-courses/:courseId/stats
+Получить детальную статистику по курсу
 
-#### Get User Reviews
-```http
-GET /api/reviews/user
-Authorization: Bearer <token>
-```
+---
 
-### Favorites
+## 💰 Sales & Purchases API
 
-#### Add to Favorites
-```http
-POST /api/favorites
-Authorization: Bearer <token>
-Content-Type: application/json
+### POST /api/sales/purchase
+Покупка курса (для студентов)
 
-{
-  "courseId": 1
-}
-```
-
-#### Get User Favorites
-```http
-GET /api/favorites
-Authorization: Bearer <token>
-```
-
-#### Remove from Favorites
-```http
-DELETE /api/favorites/:courseId
-Authorization: Bearer <token>
-```
-
-### Certificates
-
-#### Get User Certificates
-```http
-GET /api/certificates/my-certificates
-Authorization: Bearer <token>
-```
-
-**Query Parameters:**
-- `search` (optional): Search by title or date
-- `status` (optional): Filter by status (ACTIVE, INACTIVE, REVOKED)
-- `type` (optional): Filter by type (COMPLETION, ACHIEVEMENT, PARTICIPATION, CUSTOM)
-- `sortBy` (optional): Sort by field (issued_at, title, completion_date, created_at)
-- `sortOrder` (optional): Sort order (ASC, DESC)
-
-**Response:**
+**Request Body:**
 ```json
 {
-  "certificates": [
-    {
-      "id": 3,
-      "user_id": 3,
-      "course_id": 1,
-      "title": "Сертифицированный Налоговый консультант по вопросам имущества",
-      "description": "Данный сертификат подтверждает успешное прохождение курса...",
-      "certificate_type": "COMPLETION",
-      "instructor_name": "Лана Б.",
-      "completion_date": "2024-01-20T00:00:00.000Z",
-      "certificate_number": "CERT-1757878696064-DK3DBVPSF",
-      "verification_code": "DCB2DF388547CB5E",
-      "is_verified": false,
-      "pdf_url": "/api/certificates/3_1_1757878696064.pdf",
-      "share_url": "http://localhost:3000/certificates/verify/DCB2DF388547CB5E",
-      "status": "ACTIVE",
-      "issued_at": "2025-09-14T19:38:16.064Z",
-      "course_title": "Основы налогообложения",
-      "course_image": "/coursePlaceholder.png",
-      "author_name": "Лана Б."
-    }
-  ]
+  "course_id": 1,
+  "payment_method": "card",
+  "card_number": "1234567890123456",
+  "card_holder": "John Doe",
+  "expiry_date": "12/25",
+  "cvv": "123"
 }
-```
-
-#### Get Certificate by ID
-```http
-GET /api/certificates/:id
-Authorization: Bearer <token>
-```
-
-#### Generate Certificate
-```http
-POST /api/certificates/generate/:courseId
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Certificate Title",
-  "description": "Certificate description",
-  "certificateType": "COMPLETION",
-  "instructorName": "Instructor Name",
-  "completionDate": "2024-01-20"
-}
-```
-
-#### Download Certificate
-```http
-GET /api/certificates/:id/download
-Authorization: Bearer <token>
-```
-
-#### Get Share Link
-```http
-GET /api/certificates/:id/share
-Authorization: Bearer <token>
 ```
 
 **Response:**
 ```json
 {
-  "shareUrl": "http://localhost:3000/certificates/verify/DCB2DF388547CB5E",
-  "verificationCode": "DCB2DF388547CB5E",
-  "certificateNumber": "CERT-1757878696064-DK3DBVPSF"
-}
-```
-
-#### Verify Certificate (Public)
-```http
-GET /api/certificates/verify/:code
-```
-
-**Response:**
-```json
-{
-  "certificate": {
-    "id": 3,
-    "title": "Сертифицированный Налоговый консультант по вопросам имущества",
-    "description": "Данный сертификат подтверждает успешное прохождение курса...",
-    "certificate_type": "COMPLETION",
-    "instructor_name": "Лана Б.",
-    "completion_date": "2024-01-20T00:00:00.000Z",
-    "certificate_number": "CERT-1757878696064-DK3DBVPSF",
-    "verification_code": "DCB2DF388547CB5E",
-    "status": "ACTIVE",
-    "course_title": "Основы налогообложения",
-    "author_name": "Лана Б.",
-    "user_name": "Student User",
-    "user_email": "student@taxbilim.com"
+  "success": true,
+  "message": "Course purchased successfully",
+  "purchase": {
+    "id": 1,
+    "amount": 500.00,
+    "payment_method": "card",
+    "payment_status": "completed",
+    "created_at": "2024-10-29T00:00:00.000Z"
   },
-  "isValid": true,
-  "message": "Certificate verified successfully"
-}
-```
-
-#### Update Certificate (ADMIN/TEACHER)
-```http
-PUT /api/certificates/:id
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Updated Title",
-  "description": "Updated description",
-  "certificateType": "ACHIEVEMENT",
-  "status": "ACTIVE",
-  "instructorName": "Updated Instructor",
-  "completionDate": "2024-02-01"
-}
-```
-
-#### Delete Certificate (ADMIN)
-```http
-DELETE /api/certificates/:id
-Authorization: Bearer <token>
-```
-
-#### Get Certificate Statistics (ADMIN)
-```http
-GET /api/certificates/stats/overview
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "statistics": {
-    "total_certificates": "3",
-    "active_certificates": "3",
-    "inactive_certificates": "0",
-    "revoked_certificates": "0",
-    "completion_certificates": "2",
-    "achievement_certificates": "1",
-    "certificates_last_30_days": "3",
-    "certificates_last_7_days": "3"
+  "enrollment": {
+    "id": 1,
+    "enrolled_at": "2024-10-29T00:00:00.000Z"
+  },
+  "course": {
+    "id": 1,
+    "title": "Course Title",
+    "description": "Course description",
+    "author_name": "Teacher Name",
+    "author_avatar": "avatar_url"
   }
 }
 ```
 
-#### Get All Certificates (ADMIN)
-```http
-GET /api/certificates
-Authorization: Bearer <token>
-```
+### GET /api/sales/my-purchases
+Получить историю покупок студента
 
 **Query Parameters:**
-- `search` (optional): Search term
-- `status` (optional): Filter by status
-- `type` (optional): Filter by type
-- `page` (optional): Page number (default: 1)
-- `limit` (optional): Items per page (default: 10)
+- `page` (optional): Page number
+- `limit` (optional): Items per page
 
-**Note:** For detailed certificate API documentation, see `CERTIFICATES_API_DOCUMENTATION.md`
+---
 
-### Categories
+## 📝 Modules API
 
-#### Get All Categories
-```http
-GET /api/categories
-```
+### GET /api/modules/course/:courseId
+Получить модули курса
 
-**Response:**
-```json
-{
-  "categories": [
-    {
-      "id": 1,
-      "name": "Налогообложение",
-      "description": "Курсы по налогообложению",
-      "course_count": 5
-    }
-  ]
-}
-```
+### POST /api/modules/:id/complete
+Отметить модуль как завершенный
 
-## Data Models
+### POST /api/modules/:id/incomplete
+Отметить модуль как незавершенный
 
-### User
-```json
-{
-  "id": 1,
-  "email": "user@taxbilim.com",
-  "name": "John Doe",
-  "role": "STUDENT",
-  "avatar": "/avatars.png",
-  "created_at": "2025-08-12T21:50:26.161Z"
-}
-```
+### GET /api/modules/:id/tests
+Проверить есть ли тесты в модуле
 
-### Course
-```json
-{
-  "id": 1,
-  "title": "Course Title",
-  "description": "Course description",
-  "image_src": "/coursePlaceholder.png",
-  "price": "25990.00",
-  "bg": "white",
-  "is_published": true,
-  "is_sales_leader": true,
-  "is_recorded": true,
-  "features": ["Feature 1", "Feature 2"],
-  "what_you_learn": ["Learning 1", "Learning 2"],
-  "author_id": 1,
-  "author_name": "Author Name",
-  "author_avatar": "/avatars.png",
-  "enrollment_count": "150",
-  "review_count": "25",
-  "average_rating": 4.8,
-  "created_at": "2025-08-12T21:50:26.161Z",
-  "reviews": {
-    "statistics": {
-      "total": 25,
-      "average": 4.8,
-      "distribution": {
-        "five_star": 15,
-        "four_star": 8,
-        "three_star": 1,
-        "two_star": 1,
-        "one_star": 0
-      }
-    },
-    "recent_reviews": [
-      {
-        "id": 1,
-        "user_id": 1,
-        "course_id": 1,
-        "rating": 5,
-        "comment": "Excellent course!",
-        "created_at": "2025-08-12T21:50:26.161Z",
-        "user_name": "John Doe",
-        "user_avatar": "/avatars.png"
-      }
-    ]
-  }
-}
-```
+### GET /api/modules/:id/tests/summary
+Получить сводку по тестам модуля
 
-### Lesson
-```json
-{
-  "id": 1,
-  "title": "Lesson Title",
-  "content": "Lesson content",
-  "video_url": "https://example.com/video.mp4",
-  "order": 1,
-  "module_id": 1,
-  "duration": 15,
-  "lesson_type": "VIDEO",
-  "is_finished": true,
-  "is_unlocked": false,
-  "access": {
-    "isAccessible": true,
-    "isLocked": false,
-    "type": "VIDEO",
-    "label": "Видеоурок",
-    "icon": "play-circle"
-  },
-  "navigationUrl": "/lesson/1/video",
-  "typeLabel": "Видеоурок",
-  "typeIcon": "play-circle"
-}
-```
+---
 
-### Test
-```json
-{
-  "id": 1,
-  "lesson_id": 3,
-  "title": "Test Title",
-  "description": "Test description",
-  "time_limit": 30,
-  "passing_score": 70,
-  "questions": [
-    {
-      "question_id": 1,
-      "question_text": "Question text",
-      "question_type": "multiple_choice",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "points": 2
-    }
-  ]
-}
-```
+## 📚 Lessons API
+
+### GET /api/lessons/:id
+Получить информацию об уроке
+
+### POST /api/lessons/:id/complete
+Отметить урок как завершенный
+
+---
+
+## 🧪 Tests API
+
+### GET /api/tests/:id
+Получить тест по ID
+
+### POST /api/tests/:id/submit
+Отправить ответы на тест
+
+### GET /api/tests/:id/attempts/detailed
+Получить детальную информацию о попытках прохождения теста
+
+---
+
+## 📜 Certificates API
+
+### GET /api/certificates/verify/:code
+Публичная проверка сертификата (без авторизации)
+
+### GET /api/certificates
+Получить сертификаты пользователя
+
+### POST /api/certificates/generate
+Сгенерировать сертификат
+
+---
+
+## ⭐ Favorites API
+
+### GET /api/favorites
+Получить избранные курсы
+
+### POST /api/favorites/:courseId
+Добавить курс в избранное
+
+### DELETE /api/favorites/:courseId
+Удалить курс из избранного
+
+---
+
+## 📊 Progress API
+
+### GET /api/progress/course/:courseId
+Получить прогресс по курсу
+
+### POST /api/progress/lesson/:lessonId
+Обновить прогресс урока
+
+---
+
+## 🏷️ Categories API
+
+### GET /api/categories
+Получить список категорий
+
+### POST /api/categories
+Создать новую категорию (ADMIN only)
+
+---
+
+## 📝 Reviews API
+
+### GET /api/reviews/course/:courseId
+Получить отзывы по курсу
+
+### POST /api/reviews
+Создать отзыв
+
+---
+
+## 👤 Users API
+
+### GET /api/users/profile
+Получить профиль пользователя
+
+### PUT /api/users/profile
+Обновить профиль пользователя
+
+---
+
+## 📋 Enrollments API
+
+### GET /api/enrollments
+Получить записи пользователя на курсы
+
+### POST /api/enrollments/:courseId
+Записаться на курс
+
+---
 
 ## Error Responses
 
-### Authentication Error
+### 400 Bad Request
 ```json
 {
-  "message": "Access denied. No token provided."
-}
-```
-
-### Validation Error
-```json
-{
+  "message": "Validation error",
   "errors": [
     {
       "type": "field",
-      "value": "",
-      "msg": "Email is required",
+      "msg": "Invalid value",
       "path": "email",
       "location": "body"
     }
@@ -1203,75 +463,86 @@ GET /api/categories
 }
 ```
 
-### Not Found Error
+### 401 Unauthorized
+```json
+{
+  "message": "Authentication required."
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "message": "Access denied. Teacher role required."
+}
+```
+
+### 404 Not Found
 ```json
 {
   "message": "Course not found."
 }
 ```
 
-### Server Error
+### 500 Internal Server Error
 ```json
 {
   "message": "Server error."
 }
 ```
 
-## Testing
+---
 
-### Test Credentials
+## Database Schema
 
-The system comes with pre-created test users:
+### Courses Table
+- `id` (SERIAL PRIMARY KEY)
+- `title` (VARCHAR) - Название курса
+- `description` (TEXT) - Описание курса
+- `price` (DECIMAL) - Цена курса
+- `author_id` (INTEGER) - ID автора
+- `category_id` (INTEGER) - ID категории
+- `access_duration` (VARCHAR) - Длительность доступа
+- `video_url` (TEXT) - Ссылка на видео
+- `is_published` (BOOLEAN) - Опубликован ли курс
+- `features` (TEXT[]) - Массив функций
+- `what_you_learn` (TEXT[]) - Массив того, что изучит студент
 
-- **Admin**: `admin@taxbilim.com` / `admin123`
-- **Teacher**: `teacher@taxbilim.com` / `teacher123`
-- **Student**: `student@taxbilim.com` / `student123`
+### Purchases Table
+- `id` (SERIAL PRIMARY KEY)
+- `user_id` (INTEGER) - ID пользователя
+- `course_id` (INTEGER) - ID курса
+- `amount` (DECIMAL) - Сумма покупки
+- `payment_method` (VARCHAR) - Способ оплаты
+- `payment_status` (VARCHAR) - Статус платежа
+- `card_number_masked` (VARCHAR) - Замаскированный номер карты
+- `card_holder` (VARCHAR) - Владелец карты
+- `expiry_date` (VARCHAR) - Дата истечения карты
+- `transaction_id` (VARCHAR) - ID транзакции
+- `created_at` (TIMESTAMP) - Дата создания
 
-### Sample Data
+---
 
-The system automatically creates:
-- 2 courses with modules and lessons
-- 1 test with 5 questions for lesson 3
-- Sample enrollments, reviews, and favorites
-- Test user accounts
+## Test Credentials
+
+### Admin
+- Email: `admin@taxbilim.com`
+- Password: `admin123`
+
+### Teacher
+- Email: `teacher@taxbilim.com`
+- Password: `teacher123`
+
+### Student
+- Email: `student@taxbilim.com`
+- Password: `student123`
+
+---
 
 ## Rate Limiting
-
-The API implements rate limiting:
-- **Limit**: 100 requests per 15 minutes per IP
-- **Headers**: Rate limit information is included in response headers
+- 100 requests per 15 minutes per IP
+- 1000 requests per hour per authenticated user
 
 ## CORS
-
-The API supports CORS for frontend integration:
-- **Origin**: `http://localhost:3000` (development)
-- **Credentials**: Enabled
-
-## Health Check
-
-```http
-GET /health
-```
-
-**Response:**
-```json
-{
-  "status": "OK",
-  "timestamp": "2025-08-18T16:45:00.000Z",
-  "uptime": 3600
-}
-```
-
-## Getting Started
-
-1. **Start the backend**: `docker compose up -d`
-2. **Get authentication token**: Use login/register endpoints
-3. **Explore courses**: Use `/api/courses` endpoint
-4. **Enroll in a course**: Use `/api/enrollments` endpoint
-5. **Access lessons**: Use `/api/lessons/:id` endpoint
-6. **Complete lessons**: Use `/api/lessons/:id/complete` endpoint
-7. **Take tests**: Use `/api/tests/lesson/:lessonId` endpoint
-
-## Support
-
-For additional support or questions, please refer to the project documentation or contact the development team. 
+- Allowed origins: `http://localhost:3001`, `http://89.219.32.91:3001`
+- Credentials: enabled
