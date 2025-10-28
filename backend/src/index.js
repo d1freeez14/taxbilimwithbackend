@@ -133,7 +133,7 @@ app.get('/api-docs', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/courses', courseRoutes);
+app.use('/api/courses', authMiddleware.auth, courseRoutes);
 app.use('/api/modules', authMiddleware.auth, moduleRoutes);
 app.use('/api/lessons', authMiddleware.auth, lessonRoutes);
 app.use('/api/users', authMiddleware.auth, userRoutes);

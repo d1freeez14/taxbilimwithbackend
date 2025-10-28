@@ -388,9 +388,11 @@ router.post('/', [
   body('title').trim().isLength({ min: 3 }),
   body('description').trim().isLength({ min: 10 }),
   body('price').isFloat({ min: 0 }),
-  body('authorId').notEmpty(),
   body('features').isArray(),
   body('whatYouLearn').isArray(),
+  body('category_id').optional().isInt(),
+  body('access_duration').optional().isIn(['lifetime', '1_year', '2_years', '6_months']),
+  body('video_url').optional().isURL(),
   body('progress').optional().isInt({ min: 0, max: 100 })
 ], requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
   try {
@@ -399,11 +401,40 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { title, description, price, authorId, features, whatYouLearn, imageSrc, bg, progress = 0 } = req.body;
+    const { 
+      title, 
+      description, 
+      price, 
+      features, 
+      whatYouLearn, 
+      imageSrc, 
+      bg, 
+      category_id,
+      access_duration = 'lifetime',
+      video_url,
+      progress = 0 
+    } = req.body;
+
+    // Используем ID текущего пользователя как автора
+    const authorId = req.user.id;
 
     const createQuery = `
-      INSERT INTO courses (title, description, price, author_id, features, what_you_learn, image_src, bg, progress)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO courses (
+        title, 
+        description, 
+        price, 
+        author_id, 
+        features, 
+        what_you_learn, 
+        image_src, 
+        bg, 
+        progress,
+        category_id,
+        access_duration,
+        video_url,
+        is_published
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `;
 
@@ -412,11 +443,15 @@ router.post('/', [
       description,
       parseFloat(price),
       authorId,
-      JSON.stringify(features),
-      JSON.stringify(whatYouLearn),
+      features, // PostgreSQL автоматически конвертирует массивы
+      whatYouLearn, // PostgreSQL автоматически конвертирует массивы
       imageSrc || '/coursePlaceholder.png',
       bg || 'white',
-      parseInt(progress)
+      parseInt(progress),
+      category_id || null,
+      access_duration,
+      video_url || null,
+      false // По умолчанию курс не опубликован
     ]);
 
     const course = courseResult.rows[0];
@@ -431,7 +466,11 @@ router.post('/', [
     const authorResult = await query(authorQuery, [course.author_id]);
     course.author = authorResult.rows[0];
 
-    res.status(201).json({ course });
+    res.status(201).json({ 
+      success: true,
+      message: 'Course created successfully',
+      course 
+    });
   } catch (error) {
     console.error('Error creating course:', error);
     res.status(500).json({ message: 'Server error.' });
