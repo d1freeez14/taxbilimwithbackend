@@ -22,6 +22,15 @@ router.get('/my-courses', authMiddleware.auth, async (req, res) => {
       limit = 20 
     } = req.query;
 
+    // Check if category_id column exists
+    const checkColumnQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'courses' AND column_name = 'category_id'
+    `;
+    const columnCheck = await query(checkColumnQuery);
+    const hasCategoryId = columnCheck.rows.length > 0;
+
     // Строим WHERE условия
     let whereConditions = ['c.author_id = $1'];
     let queryParams = [userId];
@@ -39,7 +48,7 @@ router.get('/my-courses', authMiddleware.auth, async (req, res) => {
       paramIndex++;
     }
 
-    if (category_id) {
+    if (category_id && hasCategoryId) {
       whereConditions.push(`c.category_id = $${paramIndex}`);
       queryParams.push(category_id);
       paramIndex++;
@@ -59,22 +68,45 @@ router.get('/my-courses', authMiddleware.auth, async (req, res) => {
 
     // Основной запрос с пагинацией
     const offset = (page - 1) * limit;
+    
+    // Build SELECT and GROUP BY clauses dynamically based on existing columns
+    let selectFields = [
+      'c.id', 'c.title', 'c.description', 'c.price', 'c.image_src', 'c.bg',
+      'c.is_published', 'c.is_sales_leader', 'c.is_recorded',
+      'c.created_at', 'c.updated_at'
+    ];
+    let groupByFields = [
+      'c.id', 'c.title', 'c.description', 'c.price', 'c.image_src', 'c.bg',
+      'c.is_published', 'c.is_sales_leader', 'c.is_recorded',
+      'c.created_at', 'c.updated_at'
+    ];
+    
+    // Check for optional columns
+    const checkOptionalColumnsQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'courses' 
+      AND column_name IN ('category_id', 'access_duration', 'video_url')
+    `;
+    const optionalColumnsCheck = await query(checkOptionalColumnsQuery);
+    const existingOptionalColumns = optionalColumnsCheck.rows.map(row => row.column_name);
+    
+    if (existingOptionalColumns.includes('category_id')) {
+      selectFields.push('c.category_id');
+      groupByFields.push('c.category_id');
+    }
+    if (existingOptionalColumns.includes('access_duration')) {
+      selectFields.push('c.access_duration');
+      groupByFields.push('c.access_duration');
+    }
+    if (existingOptionalColumns.includes('video_url')) {
+      selectFields.push('c.video_url');
+      groupByFields.push('c.video_url');
+    }
+    
     const coursesQuery = `
       SELECT 
-        c.id,
-        c.title,
-        c.description,
-        c.price,
-        c.image_src,
-        c.bg,
-        c.is_published,
-        c.is_sales_leader,
-        c.is_recorded,
-        c.category_id,
-        c.access_duration,
-        c.video_url,
-        c.created_at,
-        c.updated_at,
+        ${selectFields.join(', ')},
         COUNT(DISTINCT e.id) as enrollment_count,
         COUNT(DISTINCT CASE WHEN e.completed_at IS NOT NULL THEN e.id END) as completed_enrollments,
         COUNT(DISTINCT r.id) as review_count,
@@ -89,9 +121,7 @@ router.get('/my-courses', authMiddleware.auth, async (req, res) => {
       LEFT JOIN modules m ON c.id = m.course_id
       LEFT JOIN lessons l ON m.id = l.module_id
       WHERE ${whereClause}
-      GROUP BY c.id, c.title, c.description, c.price, c.image_src, c.bg, 
-               c.is_published, c.is_sales_leader, c.is_recorded, c.category_id,
-               c.access_duration, c.video_url, c.created_at, c.updated_at
+      GROUP BY ${groupByFields.join(', ')}
       ORDER BY c.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
@@ -100,33 +130,45 @@ router.get('/my-courses', authMiddleware.auth, async (req, res) => {
     const coursesResult = await query(coursesQuery, queryParams);
 
     // Форматируем результат
-    const courses = coursesResult.rows.map(course => ({
-      id: course.id,
-      title: course.title,
-      description: course.description,
-      price: parseFloat(course.price),
-      image_src: course.image_src,
-      bg: course.bg,
-      is_published: course.is_published,
-      is_sales_leader: course.is_sales_leader,
-      is_recorded: course.is_recorded,
-      category_id: course.category_id,
-      access_duration: course.access_duration,
-      video_url: course.video_url,
-      created_at: course.created_at,
-      updated_at: course.updated_at,
-      enrollment_count: parseInt(course.enrollment_count),
-      completed_enrollments: parseInt(course.completed_enrollments),
-      review_count: parseInt(course.review_count),
-      average_rating: parseFloat(course.average_rating || 0),
-      total_revenue: parseFloat(course.total_revenue || 0),
-      module_count: parseInt(course.module_count),
-      lesson_count: parseInt(course.lesson_count),
-      total_duration: parseInt(course.total_duration),
-      completion_rate: course.enrollment_count > 0 
-        ? Math.round((course.completed_enrollments / course.enrollment_count) * 100) 
-        : 0
-    }));
+    const courses = coursesResult.rows.map(course => {
+      const courseData = {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        price: parseFloat(course.price),
+        image_src: course.image_src,
+        bg: course.bg,
+        is_published: course.is_published,
+        is_sales_leader: course.is_sales_leader,
+        is_recorded: course.is_recorded,
+        created_at: course.created_at,
+        updated_at: course.updated_at,
+        enrollment_count: parseInt(course.enrollment_count),
+        completed_enrollments: parseInt(course.completed_enrollments),
+        review_count: parseInt(course.review_count),
+        average_rating: parseFloat(course.average_rating || 0),
+        total_revenue: parseFloat(course.total_revenue || 0),
+        module_count: parseInt(course.module_count),
+        lesson_count: parseInt(course.lesson_count),
+        total_duration: parseInt(course.total_duration),
+        completion_rate: course.enrollment_count > 0 
+          ? Math.round((course.completed_enrollments / course.enrollment_count) * 100) 
+          : 0
+      };
+      
+      // Add optional fields if they exist
+      if (existingOptionalColumns.includes('category_id')) {
+        courseData.category_id = course.category_id;
+      }
+      if (existingOptionalColumns.includes('access_duration')) {
+        courseData.access_duration = course.access_duration;
+      }
+      if (existingOptionalColumns.includes('video_url')) {
+        courseData.video_url = course.video_url;
+      }
+      
+      return courseData;
+    });
 
     res.json({
       success: true,

@@ -76,6 +76,15 @@ router.get('/', auth, async (req, res) => {
     const offset = (page - 1) * limit;
     const userId = req.user ? req.user.id : null;
 
+    // Check if category_id column exists
+    const checkColumnQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'courses' AND column_name = 'category_id'
+    `;
+    const columnCheck = await query(checkColumnQuery);
+    const hasCategoryId = columnCheck.rows.length > 0;
+
     let whereClause = 'WHERE c.is_published = true';
     let params = [];
     let paramIndex = 1;
@@ -86,10 +95,21 @@ router.get('/', auth, async (req, res) => {
       paramIndex++;
     }
 
-    if (category) {
+    if (category && hasCategoryId) {
       whereClause += ` AND c.category_id = $${paramIndex}`;
       params.push(category);
       paramIndex++;
+    } else if (category && !hasCategoryId) {
+      // If category filter is requested but column doesn't exist, return empty results
+      return res.json({ 
+        courses: [], 
+        pagination: { 
+          page: parseInt(page), 
+          limit: parseInt(limit), 
+          total: 0, 
+          pages: 0 
+        } 
+      });
     }
 
     const coursesQuery = `
@@ -418,41 +438,73 @@ router.post('/', [
     // Используем ID текущего пользователя как автора
     const authorId = req.user.id;
 
+    // Check which columns exist in the courses table
+    const checkColumnsQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'courses' 
+      AND column_name IN ('category_id', 'access_duration', 'video_url')
+    `;
+    const columnsCheck = await query(checkColumnsQuery);
+    const existingColumns = columnsCheck.rows.map(row => row.column_name);
+    const hasCategoryId = existingColumns.includes('category_id');
+    const hasAccessDuration = existingColumns.includes('access_duration');
+    const hasVideoUrl = existingColumns.includes('video_url');
+
+    // Build dynamic INSERT query based on existing columns
+    let columns = ['title', 'description', 'price', 'author_id', 'features', 'what_you_learn', 'image_src', 'bg', 'progress', 'is_published'];
+    let values = [];
+    let paramIndex = 1;
+    let placeholders = [];
+
+    // Add base columns
+    values.push(title);
+    placeholders.push(`$${paramIndex++}`);
+    values.push(description);
+    placeholders.push(`$${paramIndex++}`);
+    values.push(parseFloat(price));
+    placeholders.push(`$${paramIndex++}`);
+    values.push(authorId);
+    placeholders.push(`$${paramIndex++}`);
+    values.push(features);
+    placeholders.push(`$${paramIndex++}`);
+    values.push(whatYouLearn);
+    placeholders.push(`$${paramIndex++}`);
+    values.push(imageSrc || '/coursePlaceholder.png');
+    placeholders.push(`$${paramIndex++}`);
+    values.push(bg || 'white');
+    placeholders.push(`$${paramIndex++}`);
+    values.push(parseInt(progress));
+    placeholders.push(`$${paramIndex++}`);
+
+    // Add optional columns if they exist
+    if (hasCategoryId) {
+      columns.push('category_id');
+      values.push(category_id || null);
+      placeholders.push(`$${paramIndex++}`);
+    }
+    if (hasAccessDuration) {
+      columns.push('access_duration');
+      values.push(access_duration);
+      placeholders.push(`$${paramIndex++}`);
+    }
+    if (hasVideoUrl) {
+      columns.push('video_url');
+      values.push(video_url || null);
+      placeholders.push(`$${paramIndex++}`);
+    }
+
+    // Add is_published last
+    values.push(false);
+    placeholders.push(`$${paramIndex++}`);
+
     const createQuery = `
-      INSERT INTO courses (
-        title, 
-        description, 
-        price, 
-        author_id, 
-        features, 
-        what_you_learn, 
-        image_src, 
-        bg, 
-        progress,
-        category_id,
-        access_duration,
-        video_url,
-        is_published
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO courses (${columns.join(', ')})
+      VALUES (${placeholders.join(', ')})
       RETURNING *
     `;
 
-    const courseResult = await query(createQuery, [
-      title,
-      description,
-      parseFloat(price),
-      authorId,
-      features, // PostgreSQL автоматически конвертирует массивы
-      whatYouLearn, // PostgreSQL автоматически конвертирует массивы
-      imageSrc || '/coursePlaceholder.png',
-      bg || 'white',
-      parseInt(progress),
-      category_id || null,
-      access_duration,
-      video_url || null,
-      false // По умолчанию курс не опубликован
-    ]);
+    const courseResult = await query(createQuery, values);
 
     const course = courseResult.rows[0];
 

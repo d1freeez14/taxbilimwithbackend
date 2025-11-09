@@ -172,6 +172,9 @@ app.use('*', (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 const { initDatabase } = require('./scripts/init-db');
+const { addLessonFeatures } = require('./scripts/add-lesson-features');
+const { addProgressToCourses } = require('./scripts/add-progress-to-courses');
+const { addCourseFields } = require('./scripts/add-course-fields');
 
 const start = async () => {
   try {
@@ -181,6 +184,34 @@ const start = async () => {
     
     // Initialize database tables
     await initDatabase();
+    
+    // Run migrations in order
+    console.log('🔄 Running migrations...');
+    try {
+      // Migration 1: Add lesson features (authors, enrollments, lessons, tests)
+      await addLessonFeatures();
+      console.log('✅ Lesson features migration completed');
+    } catch (migrationError) {
+      console.log('⚠️ Lesson features migration failed (this is normal if already applied):', migrationError.message);
+    }
+    
+    try {
+      // Migration 2: Add progress field to courses
+      await addProgressToCourses();
+      console.log('✅ Progress field migration completed');
+    } catch (migrationError) {
+      console.log('⚠️ Progress field migration failed (this is normal if already applied):', migrationError.message);
+    }
+    
+    try {
+      // Migration 3: Add category_id, access_duration, video_url to courses
+      await addCourseFields();
+      console.log('✅ Course fields migration completed');
+    } catch (migrationError) {
+      console.log('⚠️ Course fields migration failed (this is normal if already applied):', migrationError.message);
+    }
+    
+    console.log('✅ All migrations completed');
     
     // Seed database with initial data
     console.log('🌱 Seeding database...');

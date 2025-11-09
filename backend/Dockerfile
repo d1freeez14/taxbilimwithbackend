@@ -1,7 +1,7 @@
 # ========= base =========
 FROM node:18-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache curl \
+RUN apk add --no-cache curl netcat-openbsd \
  && addgroup -g 1001 -S nodejs \
  && adduser -S nodejs -u 1001 \
  && chown -R nodejs:nodejs /app
