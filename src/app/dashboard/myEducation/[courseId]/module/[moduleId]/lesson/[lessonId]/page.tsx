@@ -8,8 +8,7 @@ import {CourseService} from "@/services/course";
 import {useSession} from "@/lib/useSession";
 
 const LessonPageById = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const router = useRouter();
   const {courseId, moduleId, lessonId} = useParams();
   console.log({courseId, moduleId, lessonId})

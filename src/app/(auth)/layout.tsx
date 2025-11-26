@@ -1,7 +1,8 @@
 'use client'
 import Image from "next/image";
-import TextSlider from "@/components/TextSlider";
+const TextSlider = dynamic(() => import('@/components/TextSlider'), { ssr: false });
 import {Icon} from "@iconify/react";
+import dynamic from "next/dynamic";
 
 const AuthLayout = ({
                       children

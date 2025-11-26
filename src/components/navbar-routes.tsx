@@ -1,24 +1,36 @@
 "use client";
-import { usePathname } from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import {IconChat} from "@/shared/icons/IconChat";
 import {IconNotifications} from "@/shared/icons/IconNotifications";
 import {IconMore} from "@/shared/icons/IconMore";
 import Image from "next/image";
 import {guestRoutes} from "@/shared/routes";
 import {useSession} from "@/lib/useSession";
+import Link from "next/link";
+import {Icon} from "@iconify/react";
 
 export const NavbarRoutes = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const {session, ready} = useSession();
 
   const pathname = usePathname();
+  const router = useRouter();
   const currentGuest = guestRoutes.find(route => route.href === pathname);
   const title = currentGuest?.label ?? '';
 
+  const handleCreate = () => {
+    router.push(`${pathname}/create`);
+  };
   return (
     <div className={'w-full flex justify-between items-center gap-1 px-10 py-5'}>
       <h1 className={'text-[30px] font-semibold'}>{title}</h1>
       <div className={'flex items-center gap-3'}>
+        {session?.user.role === "TEACHER" && pathname === '/teacher/courses' && (
+          <button onClick={handleCreate}
+                  className={'bg-[#EE7A67] flex items-center gap-3 text-white font-semibold text-[18px] px-6 py-4 rounded-full'}>
+            <Icon icon={'typcn:plus'} className={'w-6 h-6'}/>
+            Создать новый курс
+          </button>
+        )}
         <div className={'p-[15px] bg-white rounded-full text-black'}>
           <IconChat/>
         </div>

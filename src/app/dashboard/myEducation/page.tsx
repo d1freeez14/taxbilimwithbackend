@@ -19,8 +19,7 @@ interface Enrollment {
 }
 
 const MyEducation = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const [tabType, setTabType] = useState<'all' | 'current' | 'archive'>('all');
 
   // const {

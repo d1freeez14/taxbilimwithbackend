@@ -14,8 +14,7 @@ import {CourseService} from "@/services/course";
 import {ProgressService} from "@/services/progress";
 
 const MyCourseById = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const {courseId} = useParams();
   const id = Array.isArray(courseId) ? courseId[0] : courseId
 

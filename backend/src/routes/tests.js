@@ -431,4 +431,143 @@ router.post('/:id/questions', [
   }
 });
 
+// Get all questions for a test (TEACHER/ADMIN only)
+router.get('/:id/questions', requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const questionsQuery = `
+      SELECT 
+        id,
+        test_id,
+        question_text,
+        question_type,
+        options,
+        correct_answer,
+        points,
+        question_order,
+        created_at,
+        updated_at
+      FROM test_questions
+      WHERE test_id = $1
+      ORDER BY question_order ASC, id ASC
+    `;
+
+    const result = await query(questionsQuery, [id]);
+
+    res.json({ questions: result.rows });
+  } catch (error) {
+    console.error('Error fetching test questions:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Update question (TEACHER/ADMIN only)
+router.put('/:id/questions/:questionId', [
+  body('questionText').optional().trim().isLength({ min: 5 }),
+  body('questionType').optional().isIn(['multiple_choice', 'true_false', 'text']),
+  body('options').optional().isArray(),
+  body('correctAnswer').optional().notEmpty(),
+  body('points').optional().isInt({ min: 1 }),
+  body('questionOrder').optional().isInt({ min: 1 })
+], requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { id, questionId } = req.params;
+    const updateData = req.body;
+
+    const setClauses = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (updateData.questionText !== undefined) {
+      setClauses.push(`question_text = $${paramIndex}`);
+      values.push(updateData.questionText);
+      paramIndex++;
+    }
+
+    if (updateData.questionType !== undefined) {
+      setClauses.push(`question_type = $${paramIndex}`);
+      values.push(updateData.questionType);
+      paramIndex++;
+    }
+
+    if (updateData.options !== undefined) {
+      setClauses.push(`options = $${paramIndex}`);
+      values.push(JSON.stringify(updateData.options));
+      paramIndex++;
+    }
+
+    if (updateData.correctAnswer !== undefined) {
+      setClauses.push(`correct_answer = $${paramIndex}`);
+      values.push(updateData.correctAnswer);
+      paramIndex++;
+    }
+
+    if (updateData.points !== undefined) {
+      setClauses.push(`points = $${paramIndex}`);
+      values.push(updateData.points);
+      paramIndex++;
+    }
+
+    if (updateData.questionOrder !== undefined) {
+      setClauses.push(`question_order = $${paramIndex}`);
+      values.push(updateData.questionOrder);
+      paramIndex++;
+    }
+
+    if (setClauses.length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update.' });
+    }
+
+    const updateQuery = `
+      UPDATE test_questions
+      SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $${paramIndex} AND test_id = $${paramIndex + 1}
+      RETURNING *
+    `;
+
+    values.push(questionId, id);
+
+    const result = await query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Question not found.' });
+    }
+
+    res.json({ question: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// Delete question (TEACHER/ADMIN only)
+router.delete('/:id/questions/:questionId', requireRole(['TEACHER', 'ADMIN']), async (req, res) => {
+  try {
+    const { id, questionId } = req.params;
+
+    const deleteQuery = `
+      DELETE FROM test_questions
+      WHERE id = $1 AND test_id = $2
+    `;
+
+    const result = await query(deleteQuery, [questionId, id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Question not found.' });
+    }
+
+    res.json({ message: 'Question deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting question:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+
 module.exports = router;

@@ -45,4 +45,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.post('/', async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ message: 'Name is required.' });
+    }
+
+    const sql = `
+      INSERT INTO categories (name, description)
+      VALUES ($1, $2)
+      RETURNING *;
+    `;
+    const result = await query(sql, [name.trim(), description ?? null]);
+    res.status(201).json({ category: result.rows[0] });
+  } catch (err) {
+    console.error('Error creating category:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 module.exports = router; 

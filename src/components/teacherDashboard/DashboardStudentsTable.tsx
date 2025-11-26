@@ -1,38 +1,15 @@
-'use client'
-import {useState} from "react";
-import {Icon} from "@iconify/react";
+import {Card, CardContent, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import Image from "next/image";
 import {Badge} from "@/components/ui/badge";
 import {Student} from "@/types/student";
-import {useQuery} from "@tanstack/react-query";
-import {CourseService} from "@/services/course";
-import {useSession} from "@/lib/useSession";
-import {StudentsService} from "@/services/students";
 
-const TeacherStudentsPage = () => {
-  const { session, ready } = useSession();
+interface DashboardStudentsTableProps {
+  students: Student[];
+}
 
-  const [sortBy, setSortBy] = useState('Популярности');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
-
-  const sortOptions = [
-    'Популярности',
-    'Новизне',
-    'Рейтингу',
-    'Цене: по возрастанию',
-    'Цене: по убыванию',
-  ];
-
-  const {data, isLoading, error} = useQuery({
-    queryKey: ["my-teacher-students"],
-    queryFn: () => StudentsService.getTeacherStudents(session!.token),
-    enabled: !!session?.token,
-  });
-  console.log(data)
+const DashboardStudentsTable = ({students}: DashboardStudentsTableProps) => {
 
   const formatDate = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString('ru-RU') : '-';
@@ -56,57 +33,14 @@ const TeacherStudentsPage = () => {
   };
 
   return (
-    <div className={'w-full h-full flex flex-col gap-8 px-10 pb-10'}>
-      <div className={'flex w-full justify-between items-center'}>
-        <div className={'flex items-center justify-between gap-2 py-4 px-5 bg-white rounded-[10px] w-[35%]'}>
-          <input
-            type="text"
-            placeholder="Введите название курса?"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={'w-full outline-none text-[12px]'}
-          />
-          <Icon icon={'mingcute:search-line'} className={'w-[18px] h-[18px] text-black'}/>
-        </div>
-        <div className={'flex items-center gap-3'}>
-          <div className="relative">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`flex items-center gap-3 px-5 py-4 rounded-[10px] transition-colors ${
-                selectedCategory === null
-                  ? 'bg-[#EE7A67] text-white'
-                  : 'bg-white text-black'
-              }`}
-            >
-              <Icon icon={'ic:round-space-dashboard'} className={`w-[18px] h-[18px] ${
-                selectedCategory === null ? 'text-white' : 'text-[#EE7A67]'
-              }`}/>
-              <p className={'text-[12px] font-medium'}>
-                {selectedCategory === null
-                  ? 'Категория'
-                  : categories.find(c => c.id === selectedCategory)?.name || 'Категория'
-                }
-              </p>
-            </button>
-          </div>
-          <div className={'flex items-center gap-1 px-5 py-4 bg-white rounded-[10px]'}>
-            <Icon icon={'fluent:filter-20-filled'} className={'w-[18px] h-[18px] text-[#EE7A67] mr-2'}/>
-            <p className={'text-black text-[12px] font-medium'}>Сортировать по :</p>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className={"max-w-[100px] text-black text-[12px] font-medium bg-transparent outline-none cursor-pointer appearance-none pr-0"}
-            >
-              {sortOptions.map(opt => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+    <Card className="overflow-auto">
+      <div className="w-full p-6 flex items-center justify-between">
+        <CardTitle className={'text-[24px] font-semibold'}>Студенты</CardTitle>
+        <Button variant="outline" size="sm">
+          Показать все &rarr;
+        </Button>
       </div>
-      <div className={'flex w-full h-full overflow-y-scroll bg-white rounded-[20px] p-4'}>
+      <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
@@ -119,7 +53,7 @@ const TeacherStudentsPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data?.students.map((s) => (
+            {students.map((s) => (
               <TableRow key={s.id} className="text-[16px] font-medium align-top">
                 {/* № заказа — показываю id студента; подставь свой order/enrollment id при наличии */}
                 <TableCell className="font-medium">{s.id}</TableCell>
@@ -184,7 +118,7 @@ const TeacherStudentsPage = () => {
               </TableRow>
             ))}
 
-            {(!data?.students || data.students.length === 0) && (
+            {(students.length === 0) && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-sm py-10 text-gray-500">
                   Нет данных по студентам или курсам.
@@ -193,9 +127,10 @@ const TeacherStudentsPage = () => {
             )}
           </TableBody>
         </Table>
-      </div>
-    </div>
-  );
-};
+      </CardContent>
+    </Card>
+  )
+}
 
-export default TeacherStudentsPage;
+
+export default DashboardStudentsTable;

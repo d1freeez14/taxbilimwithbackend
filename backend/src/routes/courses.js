@@ -477,6 +477,9 @@ router.post('/', [
     values.push(parseInt(progress));
     placeholders.push(`$${paramIndex++}`);
 
+    values.push(false);
+    placeholders.push(`$${paramIndex++}`);
+
     // Add optional columns if they exist
     if (hasCategoryId) {
       columns.push('category_id');
@@ -495,8 +498,7 @@ router.post('/', [
     }
 
     // Add is_published last
-    values.push(false);
-    placeholders.push(`$${paramIndex++}`);
+
 
     const createQuery = `
       INSERT INTO courses (${columns.join(', ')})

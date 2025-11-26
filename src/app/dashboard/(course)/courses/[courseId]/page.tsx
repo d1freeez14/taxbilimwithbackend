@@ -26,8 +26,7 @@ const pluralizeModules   = (c: number) => pluralizeRu(c, ["Модуль", "Мо�
 const pluralizeLessons   = (c: number) => pluralizeRu(c, ["видеоурок", "видеоурока", "видеоуроков"]);
 
 const CoursePageById = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const {courseId} = useParams();
   const id = Array.isArray(courseId) ? courseId[0] : courseId
 

@@ -1,26 +1,40 @@
-import {useCallback} from "react";
+"use client";
+
+import {useCallback, useEffect, useState} from "react";
 import {ISession} from "@/types/user";
 
 export const useSession = () => {
-  const saveSession = useCallback((session: ISession) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("session", JSON.stringify(session));
+  const [session, setSession] = useState<ISession | null>(null);
+  const [ready, setReady] = useState(false);
+
+  // Load session once on client mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const stored = localStorage.getItem("session");
+    if (stored) {
+      try {
+        setSession(JSON.parse(stored) as ISession);
+      } catch {
+        setSession(null);
+      }
     }
+    setReady(true);
   }, []);
 
-  const getSession = useCallback((): ISession | null => {
+  const saveSession = useCallback((newSession: ISession) => {
     if (typeof window !== "undefined") {
-      const session = localStorage.getItem("session");
-      return session ? (JSON.parse(session) as ISession) : null;
+      localStorage.setItem("session", JSON.stringify(newSession));
     }
-    return null;
+    setSession(newSession);
   }, []);
 
   const removeSession = useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("session");
     }
+    setSession(null);
   }, []);
 
-  return { saveSession, getSession, removeSession };
+  return { session, ready, saveSession, removeSession };
 };

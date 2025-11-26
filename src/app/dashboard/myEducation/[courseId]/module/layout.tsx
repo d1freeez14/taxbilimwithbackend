@@ -12,8 +12,7 @@ import {CourseModule} from "@/types/course";
 import {TestService} from "@/services/test";
 
 const ModuleLayout = ({children}: { children: React.ReactNode }) => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const [open, setOpen] = useState(true)
   const {courseId, moduleId, lessonId, testId} = useParams();
   const course_id = Array.isArray(courseId) ? courseId[0] : courseId ?? "";

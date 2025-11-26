@@ -168,6 +168,13 @@ export interface Course {
   updated_at?: string;
   category_id?: number;
 
+  /** Extra fields from the API */
+  completed_enrollments?: number;
+  total_revenue?: number;
+  completion_rate?: number;
+  access_duration?: string; // "lifetime" | "1_year" | "2_years" etc
+  video_url?: string | null;
+
   /** From payload */
   progress?: number;
   module_count?: number;
@@ -205,4 +212,19 @@ export interface Pagination {
 export interface CoursesListResponse {
   courses: Course[];
   pagination: Pagination;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeacherCoursesResponse {
+  success: boolean;
+  courses: Course[];
+  pagination: Pagination;
+  filters: Record<string, any>;
 }

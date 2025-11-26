@@ -202,7 +202,7 @@ router.put('/:id', [
 });
 
 // Delete module (ADMIN only)
-router.delete('/:id', requireRole(['ADMIN']), async (req, res) => {
+router.delete('/:id', requireRole(['TEACHER','ADMIN']), async (req, res) => {
   try {
     const { id } = req.params;
 

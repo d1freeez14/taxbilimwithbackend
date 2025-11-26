@@ -9,8 +9,7 @@ import {DashboardStats, User} from "@/types/user";
 import {useSession} from "@/lib/useSession";
 
 export default function Dashboard() {
-  const {getSession} = useSession()
-  const session = getSession();
+  const { session, ready } = useSession();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     enrolledCourses: 0,

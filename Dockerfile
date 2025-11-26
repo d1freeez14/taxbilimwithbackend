@@ -55,5 +55,5 @@ ENV NODE_ENV=development
 COPY --chown=nodejs:nodejs package*.json ./
 RUN npm install
 # исходники будут примонтированы томом
-EXPOSE 3001
+EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "-p", "3000"]

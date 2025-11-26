@@ -6,7 +6,7 @@ const nextConfig = {
     ]
   },
   env: {
-    NEXT_PUBLIC_API_URL: 'http://89.219.32.91:5001'
+    NEXT_PUBLIC_API_URL: 'http://localhost:5001'
   },
   webpack: (config, { dev }) => {
     if (dev) {

@@ -12,8 +12,7 @@ const RU_LETTERS = ["A", "Б", "В", "Г", "Д", "Е"];
 type Mode = "attempts" | "take" | "review";
 
 const TestPage = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const {testId} = useParams();
   const test_id = Array.isArray(testId) ? testId[0] : testId || "";
   const router = useRouter();

@@ -6,9 +6,9 @@ import CourseCreatePublishComponent from "@/components/CourseCreatePublishCompon
 const TeacherCourseCreatePage = () => {
   return (
     <div className={'w-full h-full px-10'}>
-      {/*<CourseCreateInfo/>*/}
+      <CourseCreateInfo/>
       {/*<CourseCreateProgram/>*/}
-      <CourseCreatePublishComponent/>
+      {/*<CourseCreatePublishComponent/>*/}
     </div>
   );
 };

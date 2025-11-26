@@ -9,8 +9,7 @@ import {useQuery} from "@tanstack/react-query";
 
 
 const AllCoursesPage = () => {
-  const {getSession} = useSession();
-  const session = getSession();
+  const { session, ready } = useSession();
   const [sortBy, setSortBy] = useState('Популярности');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);

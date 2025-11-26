@@ -27,8 +27,11 @@ const LoginPage = () => {
         token: result.token,
         user: result.user,
       });
-
-      router.push("/dashboard");
+      if (result.user.role === "TEACHER") {
+        router.push("teacher/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       alert(error.message || "Login failed. Please try again.");
@@ -68,7 +71,7 @@ const LoginPage = () => {
                 <input
                   id="email"
                   type="email"
-                  {...register('email', { required: 'Email обязателен' })}
+                  {...register('email', {required: 'Email обязателен'})}
                   className={`block w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none ${
                     errors.email
                       ? 'border-red-500 '
@@ -89,7 +92,7 @@ const LoginPage = () => {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  {...register('password', { required: 'Пароль обязателен' })}
+                  {...register('password', {required: 'Пароль обязателен'})}
                   className={`block w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none ${
                     errors.password
                       ? 'border-red-500 '
@@ -103,9 +106,9 @@ const LoginPage = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
                 >
                   {showPassword ? (
-                    <Icon icon={'mdi:eye-off-outline'} className="h-5 w-5 text-[#676E76]" />
+                    <Icon icon={'mdi:eye-off-outline'} className="h-5 w-5 text-[#676E76]"/>
                   ) : (
-                    <Icon icon={'mdi:eye-outline'} className="h-5 w-5 text-[#676E76]" />
+                    <Icon icon={'mdi:eye-outline'} className="h-5 w-5 text-[#676E76]"/>
                   )}
                 </button>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Icon } from "@iconify/react";
+import React, {useEffect, useMemo, useState} from "react";
+import {Icon} from "@iconify/react";
 import CourseCreateStages from "@/components/CourseCreateStages";
 import ModuleCard from "./ModuleCard";
 import type {
@@ -12,6 +12,11 @@ import type {
   LessonPreview,
   ModuleLesson,
 } from "@/types/course";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {CourseService} from "@/services/course";
+import {useParams} from "next/navigation";
+import {useSession} from "@/lib/useSession";
+import toast from "react-hot-toast";
 
 /** ---------- UI models (unify Lesson & LessonPreview) ---------- */
 export type UILesson = {
@@ -122,10 +127,13 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
                                                                    onBack,
                                                                    onPublish,
                                                                  }) => {
+  const {session, ready} = useSession();
+  const {courseId} = useParams();
+  const course_id = Array.isArray(courseId) ? courseId[0] : courseId ?? "";
   const fallbackModules: CourseModule[] = [
     {
       id: uid(),
-      title: "Модуль 1: Understanding UX basics",
+      title: "",
       order: 1,
       course_id: 0,
       created_at: nowISO(),
@@ -138,14 +146,22 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
     toUI(initialModules && initialModules.length ? initialModules : fallbackModules)
   );
 
-  // open/close state
-  const [openModules, setOpenModules] = useState<Record<number, boolean>>(() => ({}));
-  const [openLessons, setOpenLessons] = useState<Record<string, boolean>>(() => ({}));
-  const isModuleOpen = (mid: number) => !!openModules[mid];
+  // открытие только для уроков — модули теперь управляются внутри ModuleCard
+  const [openLessons, setOpenLessons] = useState<Record<string, boolean>>({});
   const isLessonOpen = (mid: number, lid: number) => !!openLessons[`${mid}:${lid}`];
 
-  const toggleModule = (mid: number) =>
-    setOpenModules((prev) => ({ ...prev, [mid]: !prev[mid] }));
+  const { data: course, isLoading, error } = useQuery({
+    queryKey: ["course", course_id, session?.token],
+    queryFn: () => CourseService.getCourseById(course_id, session!.token),
+    enabled: !!course_id && !!session?.token,
+  });
+
+  // если пришёл курс с бэка — маппим его модули в UI
+  useEffect(() => {
+    if (course?.modules) {
+      setModules(toUI(course.modules));
+    }
+  }, [course]);
 
   const toggleLesson = (mid: number, lid: number) =>
     setOpenLessons((prev) => {
@@ -156,7 +172,8 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
   const courseTotal = useMemo(
     () =>
       modules.reduce(
-        (sum, m) => sum + m.lessons.reduce((s, l) => s + (l.duration || 0), 0),
+        (sum, m) =>
+          sum + m.lessons.reduce((s, l) => s + (l.duration || 0), 0),
         0
       ),
     [modules]
@@ -174,22 +191,17 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
         id: uid(),
         title: `Модуль ${newOrder}: New module`,
         order: newOrder,
-        course_id: 0,
+        course_id: Number(course_id) || 0,
         created_at: nowISO(),
         updated_at: nowISO(),
         lessons: [],
       };
       const [ui] = toUI([base]);
-      setOpenModules((o) => ({ ...o, [ui.id]: true }));
       return [...prev, ui];
     });
 
   const removeModule = (mid: number) => {
     setModules((prev) => prev.filter((m) => m.id !== mid));
-    setOpenModules((prev) => {
-      const { [mid]: _omit, ...rest } = prev;
-      return rest;
-    });
     setOpenLessons((prev) => {
       const next = { ...prev };
       Object.keys(next).forEach((k) => {
@@ -243,7 +255,6 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
     );
 
   const publish = () => {
-    // normalize UI -> API shape
     const clean: CourseModule[] = modules.map((m) => ({
       id: m.id,
       title: m.title,
@@ -251,7 +262,7 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
       course_id: m.course_id,
       created_at: m.created_at,
       updated_at: nowISO(),
-      lessons: m.lessons.map((l) => toServerLesson(l, m)), // Lesson[] (valid ModuleLesson[])
+      lessons: m.lessons.map((l) => toServerLesson(l, m)),
       lesson_count: m.lesson_count,
       assignment_count: m.assignment_count,
       total_duration: m.total_duration,
@@ -262,24 +273,31 @@ const CourseCreateProgram: React.FC<CourseCreateProgramProps> = ({
     onPublish?.(clean);
   };
 
+  if (isLoading) {
+    return <div className="p-6">Загрузка программы курса...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">Ошибка загрузки курса</div>;
+  }
+
   return (
     <div className="w-full h-full p-6 flex flex-col bg-white rounded-[20px] gap-6">
-      <CourseCreateStages currentStage={2} />
+      {/*<CourseCreateStages currentStage={2} />*/}
 
       <div className="flex flex-col gap-6">
         {modules.map((m) => (
           <ModuleCard
             key={m.id}
-            isOpen={isModuleOpen(m.id)}
             module={m}
-            onToggle={() => toggleModule(m.id)}
+            modulesCount={modules.length}
             onTitleChange={(title) => updateModuleTitle(m.id, title)}
             onAddLesson={() => addLesson(m.id)}
             onToggleLesson={(lid) => toggleLesson(m.id, lid)}
             isLessonOpen={(lid) => isLessonOpen(m.id, lid)}
             onUpdateLesson={(lid, patch) => updateLesson(m.id, lid, patch)}
             onDeleteLesson={(lid) => removeLesson(m.id, lid)}
-            onDeleteModule={() => removeModule(m.id)}
+            onRemoveModule={() => removeModule(m.id)}
           />
         ))}
 

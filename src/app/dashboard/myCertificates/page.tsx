@@ -8,8 +8,7 @@ import {CourseService} from "@/services/course";
 import {useSession} from "@/lib/useSession";
 
 const MyCertificates = () => {
-  const {getSession} = useSession()
-  const session = getSession();
+  const { session, ready } = useSession();
   const [sortBy, setSortBy] = useState('Дата: новая');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
