@@ -75,7 +75,7 @@ const MyCertificates = () => {
       </div>
       {isLoading ? (
         <div className="w-full text-center py-10">
-          <p className="text-gray-600">Loading certificates...</p>
+          <p className="text-gray-600">Loading ...</p>
         </div>
       ) : certificates.length === 0 ? (
         <div className="w-full text-center py-10">

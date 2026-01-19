@@ -5,15 +5,18 @@ import {TestService} from "@/services/test";
 import {AttemptsResponse, SubmitAnswer, SubmitResponse, TestPayload} from "@/types/test";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {useParams, useRouter} from "next/navigation";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import toast from "react-hot-toast";
+import {CourseService} from "@/services/course";
+import FinishedCourseModal from "@/components/FinishedCourseModal";
 
 const RU_LETTERS = ["A", "Б", "В", "Г", "Д", "Е"];
 type Mode = "attempts" | "take" | "review";
 
 const TestPage = () => {
   const { session, ready } = useSession();
-  const {testId} = useParams();
+  const {courseId, moduleId, testId} = useParams();
+  const course_id = Array.isArray(courseId) ? courseId[0] : courseId ?? "";
   const test_id = Array.isArray(testId) ? testId[0] : testId || "";
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("take");
@@ -21,12 +24,28 @@ const TestPage = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null); // seconds
   const [result, setResult] = useState<SubmitResponse | null>(null);
+  const completeOnceRef = useRef(false);
+  const [isFinishedModalOpen, setIsFinishedModalOpen] = useState(false);
 
 
   const {data, isLoading, isError, error} = useQuery<TestPayload>({
     queryKey: ["test", test_id, session?.token],
     queryFn: () => TestService.getTestById(test_id, session!.token!),
     enabled: Boolean(session?.token && test_id),
+  });
+  const lesson_id = useMemo(() => {
+    return data?.test.lesson_id ?? "";
+  }, [data]);
+  const {
+    data: lesson,
+    refetch: refetchLesson,
+    isLoading: lessonLoading,
+    isError: lessonError,
+    error: lessonErr,
+  } = useQuery({
+    queryKey: ["lesson", lesson_id, session?.token],
+    queryFn: () => CourseService.getLessonById(lesson_id.toString(), session!.token),
+    enabled: Boolean(lesson_id && session?.token && mode !== "take"),
   });
   const {
     data: attemptsData,
@@ -81,6 +100,40 @@ const TestPage = () => {
       toast.error(e?.message || "Не удалось отправить ответы");
     }
   });
+  const { mutate: markLessonComplete, isPending: completingLesson } = useMutation({
+    mutationFn: async () => {
+      if (!session?.token) throw new Error("No token");
+      if (!lesson_id) throw new Error("No lesson_id");
+      return CourseService.markLessonComplete(lesson_id, session.token);
+    },
+    onSuccess: async (data) => {
+      await refetchLesson();
+
+      if(data.progress.completed) {
+        setIsFinishedModalOpen(true)
+      }
+    },
+  });
+  useEffect(() => {
+    // lesson нужен, attempts нужны, токен нужен
+    if (!session?.token) return;
+    if (!lesson_id) return;
+    if (!lesson) return;
+    if (!attemptsData?.attempts?.length) return;
+
+    // если уже finished — не отправляем
+    if (lesson.is_finished) return;
+
+    // если уже отправляли запрос — не повторяем
+    if (completeOnceRef.current) return;
+
+    // проверяем: есть ли хотя бы одна passed попытка
+    const hasPassedAttempt = attemptsData.attempts.some((a) => Boolean(a.passed));
+    if (!hasPassedAttempt) return;
+
+    completeOnceRef.current = true;
+    markLessonComplete();
+  }, [session?.token, lesson_id, lesson, attemptsData?.attempts, markLessonComplete]);
 
   const handleSelect = (questionId: number, value: string) => {
     setAnswers((prev) => ({...prev, [questionId]: value}));
@@ -152,6 +205,7 @@ const TestPage = () => {
 
             <button
               onClick={() => {
+                completeOnceRef.current = false;
                 setMode("take");
                 setResult(null);
                 setAnswers({});
@@ -301,6 +355,11 @@ const TestPage = () => {
           </div>
         </div>
       </div>
+      <FinishedCourseModal
+        isOpen={isFinishedModalOpen}
+        onClose={() => setIsFinishedModalOpen(false)}
+        courseId={course_id}
+      />
     </div>
   );
 };

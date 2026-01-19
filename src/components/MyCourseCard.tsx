@@ -2,6 +2,9 @@ import Image from "next/image";
 import {Icon} from "@iconify/react";
 import Link from "next/link";
 import {Enrollment} from "@/types/course";
+import {useRouter} from "next/navigation";
+import ReviewModal from "@/components/ReviewModal";
+import {useState} from "react";
 
 interface MyCourseCardProps {
   bg?: string;
@@ -10,9 +13,15 @@ interface MyCourseCardProps {
 }
 
 const MyCourseCard = ({bg = 'white', isFinished = false, enrollment}: MyCourseCardProps) => {
-
+  const router = useRouter();
+  const getCertificate = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push('/dashboard/myCertificates');
+  };
+  const [reviewModalOpen, setReviewModalOpen] = useState(false)
   return (
-    <Link href={`/dashboard/myEducation/${enrollment?.id}`} className={'flex flex-col p-5 rounded-[1rem] gap-6 items-center w-full'} style={{backgroundColor: bg}}>
+    <Link href={`/dashboard/myEducation/${enrollment?.course_id}`} className={'flex flex-col p-5 rounded-[1rem] gap-6 items-center w-full'} style={{backgroundColor: bg}}>
       <div className="relative w-full aspect-video rounded-[0.5rem] overflow-hidden">
         <Image src={enrollment?.course_image || "/coursePlaceholder.png"} alt="" fill className={"object-cover"}/>
         <div className={'absolute top-2.5 left-2.5'}>
@@ -73,20 +82,15 @@ const MyCourseCard = ({bg = 'white', isFinished = false, enrollment}: MyCourseCa
           <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
               className="bg-green-400 h-full rounded-full"
-              style={{width: "40%"}}
+              style={{width: `${enrollment.progress}%`}}
             ></div>
           </div>
-          <span className="text-[12px] font-medium text-black">40%</span>
+          <span className="text-[12px] font-medium text-black">{enrollment.progress}%</span>
         </div>
         {isFinished && (
           <div className={'flex flex-col w-full gap-2'}>
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                // TODO: Implement certificate download
-                alert('Certificate download will be implemented soon!');
-              }}
+              onClick={getCertificate}
               className={'px-5 py-3 bg-[#676E76] text-white rounded-[0.5rem] font-medium hover:bg-[#5a5a5a] transition-colors'}>
               Получить сертификат
             </button>
@@ -95,7 +99,7 @@ const MyCourseCard = ({bg = 'white', isFinished = false, enrollment}: MyCourseCa
                 e.preventDefault();
                 e.stopPropagation();
                 // TODO: Implement review functionality
-                alert('Review functionality will be implemented soon!');
+                setReviewModalOpen(true)
               }}
               className={'px-5 py-3 bg-white text-black rounded-[0.5rem] font-medium shadow-lg hover:bg-gray-50 transition-colors'}>
               Оставить отзыв
@@ -103,6 +107,7 @@ const MyCourseCard = ({bg = 'white', isFinished = false, enrollment}: MyCourseCa
           </div>
         )}
       </div>
+      <ReviewModal isOpen={reviewModalOpen} onClose={() => setReviewModalOpen(false)}/>
     </Link>
   );
 };
