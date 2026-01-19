@@ -32,3 +32,39 @@ export interface TopCourse {
   rating: number;
   reviews_count: number;
 }
+
+export interface PurchaseCourseRequest {
+  course_id: number;
+  payment_method: "card" | "bank_transfer" | "cash";
+  card_number?: string;
+  card_holder?: string;
+  expiry_date?: string;
+  cvv?: string;
+}
+
+export interface PurchaseCourseResponse {
+  success: boolean;
+  message: string;
+  purchase: {
+    id: number;
+    amount: number;
+    payment_method: string;
+    payment_status: string;
+    created_at: string;
+  };
+  enrollment: {
+    id: number;
+    enrolled_at: string;
+  };
+  course: {
+    id: number;
+    title: string;
+    description: string | null;
+    image_src: string | null;
+    price: number;
+    author_name?: string;
+    author_avatar?: string | null;
+  };
+}
+
+export type PayStatus = "idle" | "loading" | "success" | "error";

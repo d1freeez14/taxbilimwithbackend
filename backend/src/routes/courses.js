@@ -2,7 +2,8 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../lib/db');
 const { requireRole, auth } = require('../middleware/auth');
-const { formatCourseStatistics, getCourseSummaryText } = require('../lib/formatDuration');
+const { formatCourseStatistics, getCourseSummaryText, formatModuleStatistics, getModuleSummaryText } = require('../lib/formatDuration');
+const { formatLesson } = require('../lib/lessonTypes');
 
 const router = express.Router();
 
@@ -188,6 +189,149 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// Get course with modules and lessons for My Education
+router.get('/:id/myeducation', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user ? req.user.id : null;
+
+    const courseQuery = `
+      SELECT 
+        c.*,
+        a.id as author_id,
+        a.name as author_name,
+        a.avatar as author_avatar,
+        a.bio as author_bio
+      FROM courses c
+      LEFT JOIN authors a ON c.author_id = a.id
+      WHERE c.id = $1
+    `;
+
+    const courseResult = await query(courseQuery, [id]);
+    if (courseResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Course not found.' });
+    }
+
+    const course = courseResult.rows[0];
+    course.statistics = formatCourseStatistics(course);
+    course.summaryText = getCourseSummaryText(course);
+
+    if (userId) {
+      const progressQuery = `
+        SELECT 
+          COUNT(l.id) as total_lessons,
+          COUNT(CASE WHEN lp.completed = true THEN 1 END) as completed_lessons
+        FROM lessons l
+        JOIN modules m ON l.module_id = m.id
+        LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $2
+        WHERE m.course_id = $1
+      `;
+      const progressResult = await query(progressQuery, [id, userId]);
+      const { total_lessons, completed_lessons } = progressResult.rows[0];
+      const totalLessons = parseInt(total_lessons) || 0;
+      const completedLessons = parseInt(completed_lessons) || 0;
+      course.progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+      const finishedQuery = `
+        SELECT 1 FROM enrollments
+        WHERE user_id = $1 AND course_id = $2 AND completed_at IS NOT NULL
+      `;
+      const finishedResult = await query(finishedQuery, [userId, id]);
+      course.is_finished = finishedResult.rows.length > 0;
+    } else {
+      course.is_finished = false;
+    }
+
+    const modulesQuery = `
+      SELECT 
+        m.*,
+        COALESCE(m.lesson_count, 0) as lesson_count,
+        COALESCE(m.assignment_count, 0) as assignment_count,
+        COALESCE(m.total_duration, 0) as total_duration,
+        COALESCE(m.duration_weeks, 1) as duration_weeks,
+        COALESCE(test_stats.test_count, 0) as test_count,
+        COALESCE(test_stats.test_titles, '') as test_titles,
+        CASE 
+          WHEN $2::integer IS NULL THEN false
+          ELSE EXISTS (
+            SELECT 1 FROM module_progress mp
+            WHERE mp.user_id = $2::integer AND mp.module_id = m.id AND mp.completed = true
+          )
+        END as is_finished
+      FROM modules m
+      LEFT JOIN (
+        SELECT 
+          l.module_id,
+          COUNT(t.id) as test_count,
+          STRING_AGG(t.title, ', ') as test_titles
+        FROM lessons l
+        LEFT JOIN tests t ON l.id = t.lesson_id
+        GROUP BY l.module_id
+      ) test_stats ON m.id = test_stats.module_id
+      WHERE m.course_id = $1 
+      ORDER BY m."order"
+    `;
+
+    const modulesResult = await query(modulesQuery, [id, userId]);
+
+    const lessonsQuery = `
+      SELECT 
+        l.*,
+        m.id as module_id,
+        m.title as module_title,
+        CASE 
+          WHEN $2::integer IS NULL THEN false
+          WHEN l.locked = false THEN false
+          WHEN l."order" = 1 THEN false
+          ELSE EXISTS (
+            SELECT 1 FROM lesson_progress lp 
+            WHERE lp.user_id = $2::integer 
+            AND lp.lesson_id = (
+              SELECT id FROM lessons 
+              WHERE module_id = l.module_id 
+              AND "order" = l."order" - 1
+            )
+            AND lp.completed = true
+          )
+        END as is_unlocked,
+        CASE 
+          WHEN $2::integer IS NULL THEN false
+          ELSE COALESCE(lp.completed, false)
+        END as is_finished
+      FROM lessons l
+      JOIN modules m ON l.module_id = m.id
+      LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $2::integer
+      WHERE m.course_id = $1
+      ORDER BY m."order", l."order"
+    `;
+
+    const lessonsResult = await query(lessonsQuery, [id, userId]);
+
+    const lessonsByModule = new Map();
+    lessonsResult.rows.forEach((lesson) => {
+      const formattedLesson = formatLesson(lesson, lesson.is_unlocked, lesson.is_finished);
+      const existing = lessonsByModule.get(lesson.module_id) || [];
+      existing.push(formattedLesson);
+      lessonsByModule.set(lesson.module_id, existing);
+    });
+
+    course.modules = modulesResult.rows.map((module) => ({
+      ...module,
+      statistics: formatModuleStatistics(module),
+      summaryText: getModuleSummaryText(module),
+      hasTests: parseInt(module.test_count) > 0,
+      testCount: parseInt(module.test_count),
+      testTitles: module.test_titles ? module.test_titles.split(', ') : [],
+      lessons: lessonsByModule.get(module.id) || []
+    }));
+
+    res.json({ course });
+  } catch (error) {
+    console.error('Error fetching my education course:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 /**
  * @swagger
  * /api/courses/{id}:
@@ -338,7 +482,6 @@ router.get('/:id', auth, async (req, res) => {
     course.summaryText = getCourseSummaryText(course);
     
     // Format module statistics
-    const { formatModuleStatistics, getModuleSummaryText } = require('../lib/formatDuration');
     course.modules = modulesResult.rows.map(module => ({
       ...module,
       statistics: formatModuleStatistics(module),

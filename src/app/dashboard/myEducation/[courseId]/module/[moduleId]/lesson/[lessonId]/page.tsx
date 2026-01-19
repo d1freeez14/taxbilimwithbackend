@@ -6,6 +6,8 @@ import {useParams, useRouter, useSearchParams} from "next/navigation";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {CourseService} from "@/services/course";
 import {useSession} from "@/lib/useSession";
+import {useState} from "react";
+import FinishedCourseModal from "@/components/FinishedCourseModal";
 
 const LessonPageById = () => {
   const { session, ready } = useSession();
@@ -15,23 +17,31 @@ const LessonPageById = () => {
   const course_id = Array.isArray(courseId) ? courseId[0] : courseId ?? "";
   const module_id = Array.isArray(moduleId) ? moduleId[0] : moduleId ?? "";
   const lesson_id = Array.isArray(lessonId) ? lessonId[0] : lessonId ?? "";
+  const [isFinishedModalOpen, setIsFinishedModalOpen] = useState(false);
 
   const {data: lesson, refetch} = useQuery({
     queryKey: ["lesson", lesson_id, session?.token],
     queryFn: () => CourseService.getLessonById(lesson_id, session!.token),
     enabled: !!lesson_id && !!session?.token,
   });
-  console.log(lesson)
 
   const { mutate: toggleFinished, isPending } = useMutation({
     mutationFn: async () => {
       if (!session?.token) throw new Error("No token");
-      return lesson?.is_finished
-        ? CourseService.markLessonIncomplete(lesson_id, session.token)
-        : CourseService.markLessonComplete(lesson_id, session.token);
+      // return lesson?.is_finished
+      //   ? CourseService.markLessonIncomplete(lesson_id, session.token)
+      //   : CourseService.markLessonComplete(lesson_id, session.token);
+      if (lesson?.is_finished) {
+        return CourseService.markLessonIncomplete(lesson_id, session.token);
+      }
+      return CourseService.markLessonComplete(lesson_id, session.token);
     },
-    onSuccess: () => {
-      refetch();
+    onSuccess: async (data) => {
+      await refetch();
+
+      if(data.progress.completed) {
+        setIsFinishedModalOpen(true)
+      }
     },
   });
 
@@ -96,6 +106,11 @@ const LessonPageById = () => {
         {/*  </div>*/}
         {/*</div>*/}
       </div>
+      <FinishedCourseModal
+        isOpen={isFinishedModalOpen}
+        onClose={() => setIsFinishedModalOpen(false)}
+        courseId={course_id}
+      />
     </div>
   );
 };

@@ -84,7 +84,6 @@ export interface CourseModule {
   order: number;
   course_id: number;
 
-  /** NEW snake_case aggregates from API */
   lesson_count?: number;
   assignment_count?: number;
   total_duration?: number;
@@ -93,12 +92,11 @@ export interface CourseModule {
   created_at: string;   // ISO
   updated_at: string;   // ISO
 
-  /** Can be full lessons or preview items depending on endpoint */
   lessons: ModuleLesson[];
 
-  /** NEW camelCase stats + human summary */
   statistics?: CourseModuleStatistics;
   summaryText?: string;
+  is_finished?: boolean;
 }
 
 /** Reviews: stats + latest reviews */
@@ -152,6 +150,7 @@ export interface Course {
   is_sales_leader: boolean;
   is_recorded: boolean;
   is_favorite?: boolean;
+  is_finished: boolean;
 
   features: string[];
   what_you_learn: string[];
@@ -198,6 +197,10 @@ export interface Enrollment {
   course_image: string;
   course_price: string;
   author_name: string;
+  is_recorded: boolean;
+  total_lessons: string;
+  completed_lessons: string;
+  progress: string;
 }
 
 

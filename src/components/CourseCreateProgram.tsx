@@ -38,6 +38,7 @@ export type UILesson = {
   video_url?: string | null;
   content_type?: ContentType;
 
+
   // fields from LessonPreview (optional in UI)
   image?: string | null;
   locked?: boolean;

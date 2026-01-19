@@ -9,7 +9,13 @@ interface MyCourseModuleProps {
   module: CourseModule;
   courseId: string;
 }
+export function secondsToMinutes(seconds: number)  {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
 
+  // return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+  return minutes;
+}
 const MyCourseModule = ({module, courseId}: MyCourseModuleProps) => {
   const [open, setOpen] = useState(false)
   console.log(module)
@@ -43,23 +49,23 @@ const MyCourseModule = ({module, courseId}: MyCourseModuleProps) => {
                   fill
                   className="object-cover"
                 />
-                {/*<div className="absolute top-2 left-2 z-20">*/}
-                {/*  {lesson.locked ? (*/}
-                {/*    <Icon*/}
-                {/*      icon="material-symbols:lock"*/}
-                {/*      className="w-8 h-8 text-white bg-black rounded-full p-2"*/}
-                {/*    />*/}
-                {/*  ) : lesson.completed ? (*/}
-                {/*    <Icon*/}
-                {/*      icon="mdi:tick"*/}
-                {/*      className="w-8 h-8 text-white bg-[#53B483] rounded-full p-2"*/}
-                {/*    />*/}
-                {/*  ) : null}*/}
-                {/*</div>*/}
+                <div className="absolute top-2 left-2 z-20">
+                  {lesson.locked ? (
+                    <Icon
+                      icon="material-symbols:lock"
+                      className="w-8 h-8 text-white bg-black rounded-full p-2"
+                    />
+                  ) :('is_finished' in lesson && lesson.is_finished) ? (
+                    <Icon
+                      icon="mdi:tick"
+                      className="w-8 h-8 text-white bg-[#53B483] rounded-full p-2"
+                    />
+                  ) : null}
+                </div>
 
                 <div
                   className="absolute bottom-2 left-2 z-20 bg-white bg-opacity-75 px-2 py-1 rounded text-xs font-medium text-gray-800">
-                  {lesson.duration} минут
+                  {secondsToMinutes(lesson.duration)} мин
                 </div>
               </div>
 

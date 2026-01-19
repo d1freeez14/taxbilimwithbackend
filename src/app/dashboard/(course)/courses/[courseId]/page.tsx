@@ -10,6 +10,8 @@ import {useParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
 import {useSession} from "@/lib/useSession";
 import {CourseService} from "@/services/course";
+import {useState} from "react";
+import PaymentModal from "@/components/PaymentModal";
 
 const pluralizeRu = (count: number, [one, few, many]: [string, string, string]) => {
   const n = Math.abs(count) % 100;
@@ -29,6 +31,8 @@ const CoursePageById = () => {
   const { session, ready } = useSession();
   const {courseId} = useParams();
   const id = Array.isArray(courseId) ? courseId[0] : courseId
+
+  const [isPayOpen, setIsPayOpen] = useState(false);
 
   const {data: course, isLoading, error} = useQuery({
     queryKey: ["course", id, session?.token],
@@ -208,8 +212,9 @@ const CoursePageById = () => {
           </div>
           <div className={'flex flex-col gap-2'}>
             <button
-              className={'py-3.5 px-5 w-full bg-[#EE7A67] text-white text-[16px] font-semibold rounded-[0.5rem]'}>Приобрести
-              курс
+              onClick={() => setIsPayOpen(true)}
+              className={'py-3.5 px-5 w-full bg-[#EE7A67] text-white text-[16px] font-semibold rounded-[0.5rem]'}>
+              Приобрести курс
             </button>
             <button
               className={'py-3.5 px-5 w-full border border-[#676E76] rounded-[0.5rem] flex justify-center items-center gap-2.5'}>
@@ -219,7 +224,9 @@ const CoursePageById = () => {
           </div>
         </div>
       </div>
-
+      {isPayOpen && (
+        <PaymentModal isPayOpen={isPayOpen} setIsPayOpen={setIsPayOpen} course={course} />
+      )}
     </div>
   );
 };

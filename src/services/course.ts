@@ -2,24 +2,47 @@ import {
   Category,
   ContentType,
   Course,
-  CourseModule,
+  CourseModule, CoursesListResponse,
   Enrollment,
   Lesson,
-  LessonKind,
+  LessonKind, Pagination,
   TeacherCoursesResponse
 } from "@/types/course";
 import {Certificate} from "@/types/certificate";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://89.219.32.91:5001';
-
+type GetCoursesParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: number | string | null;
+};
 export const CourseService = {
-  getAllCourses: async (token: string) => {
-    const res = await fetch(`${BACKEND_URL}/api/courses`, {
+  getAllCourses: async (token: string, params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: number | null;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.limit) qs.set("limit", String(params.limit));
+    // backend expects `search`
+    if (params?.search?.trim()) qs.set("search", params.search.trim());
+    // backend expects `category`
+    if (params?.category !== null && params?.category !== undefined) {
+      qs.set("category", String(params.category));
+    }
+
+    const url = `${BACKEND_URL}/api/courses${qs.toString() ? `?${qs.toString()}` : ""}`;
+
+    const res = await fetch(url, {
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      cache: "no-store",
     });
 
     const data = await res.json();
@@ -27,7 +50,8 @@ export const CourseService = {
       throw new Error(data?.message || "Error fetching courses");
     }
 
-    return data.courses as Course[];
+    // backend returns { courses: [...], pagination: {...} }
+    return data as CoursesListResponse;
   },
   getCourseById: async (id: string, token: string) => {
     const res = await fetch(`${BACKEND_URL}/api/courses/${id}`, {
@@ -61,6 +85,24 @@ export const CourseService = {
     }
     return data.enrollments as Enrollment[];
   },
+  markCourseComplete: async (courseId: string | number, token: string) => {
+    const res = await fetch(`${BACKEND_URL}/api/enrollments/${courseId}/complete`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || "Error completing course");
+    }
+    return data as {
+      message: string;
+      enrollment: Enrollment;
+    };
+  },
   getModulesByCourseId: async (id: string, token: string) => {
     const res = await fetch(`${BACKEND_URL}/api/modules/course/${id}`, {
       method: "GET",
@@ -76,6 +118,22 @@ export const CourseService = {
       throw new Error(data?.message || "Error fetching enrollments");
     }
     return data.modules as CourseModule[];
+  },
+  getMyEducationByCourseId: async (id: string, token: string) => {
+    const res = await fetch(`${BACKEND_URL}/api/courses/${id}/myeducation`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || "Error fetching my education course");
+    }
+    return data.course as Course;
   },
   getLessonById: async (id: string, token: string) => {
     const res = await fetch(`${BACKEND_URL}/api/lessons/${id}`, {
@@ -127,6 +185,12 @@ export const CourseService = {
         created_at: string;
         updated_at: string;
       };
+      courseProgress: {
+        courseId: number;
+        progressPercentage: number;
+        totalLessons: number;
+        completedLessons: number;
+      };
     };
   },
 
@@ -150,6 +214,12 @@ export const CourseService = {
         completed_at: string | null;
         created_at: string;
         updated_at: string;
+      };
+      courseProgress: {
+        courseId: number;
+        progressPercentage: number;
+        totalLessons: number;
+        completedLessons: number;
       };
     };
   },

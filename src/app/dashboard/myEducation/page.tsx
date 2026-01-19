@@ -6,17 +6,6 @@ import {useSession} from "@/lib/useSession";
 import {useQuery} from "@tanstack/react-query";
 import {CourseService} from "@/services/course";
 
-interface Enrollment {
-  id: number;
-  user_id: number;
-  course_id: number;
-  enrolled_at: string;
-  completed_at: string | null;
-  course_title: string;
-  course_image: string;
-  course_price: string;
-  author_name: string;
-}
 
 const MyEducation = () => {
   const { session, ready } = useSession();

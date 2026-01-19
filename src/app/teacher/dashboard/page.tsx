@@ -70,9 +70,9 @@ const TeacherDashboard = () => {
       </div>
       {/*INFO CARDS*/}
       <div className={'flex items-center justify-between gap-5'}>
-        <DashboardInfoCards type={'income'} data={dashboardData?.monthly_stats[0].revenue ?? 0}/>
-        <DashboardInfoCards type={'soldCourses'} data={dashboardData?.monthly_stats[0].enrollments ?? 0}/>
-        <DashboardInfoCards type={'studentNumber'} data={studentsData?.students.length ?? 0}/>
+        <DashboardInfoCards type={'income'} data={dashboardData?.monthly_stats[0]?.revenue ?? 0}/>
+        <DashboardInfoCards type={'soldCourses'} data={dashboardData?.monthly_stats[0]?.enrollments ?? 0}/>
+        <DashboardInfoCards type={'studentNumber'} data={studentsData?.students?.length ?? 0}/>
       </div>
       {/*CHARTS AND TABLE*/}
       <div className={'flex flex-col gap-5 w-full'}>

@@ -4,7 +4,7 @@ import {Icon} from "@iconify/react";
 import {IconCourses} from "@/shared/icons/IconCourses";
 import Image from "next/image";
 import MyCourseModule from "@/components/MyCourseModule";
-import {Fragment, useEffect} from "react";
+import {Fragment, useEffect, useRef, useState} from "react";
 import CourseProgramModule from "@/components/CourseProgramModule";
 import modules from '@/static/modules.json'
 import {useSession} from "@/lib/useSession";
@@ -12,24 +12,48 @@ import {useParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
 import {CourseService} from "@/services/course";
 import {ProgressService} from "@/services/progress";
+import FinishedCourseModal from "@/components/FinishedCourseModal";
 
 const MyCourseById = () => {
-  const { session, ready } = useSession();
+  const {session, ready} = useSession();
   const {courseId} = useParams();
   const id = Array.isArray(courseId) ? courseId[0] : courseId
-
-  const {data: course, isLoading, error} = useQuery({
-    queryKey: ["course", id, session?.token],
-    queryFn: () => CourseService.getCourseById(id, session!.token),
-    enabled: !!id && !!session?.token,
-  });
-  console.log(course);
   // const {data: progress} = useQuery({
   //   queryKey: ["progress", id, session?.token],
   //   queryFn: () => ProgressService.getCourseProgressById(id, session!.token),
   //   enabled: !!id && !!session?.token,
   // });
   // console.log('progress',progress);
+  const {data: course} = useQuery({
+    queryKey: ["modules", id, session?.token],
+    queryFn: () => CourseService.getMyEducationByCourseId(id, session!.token),
+    enabled: !!id && !!session?.token,
+  });
+  console.log("courseData", course)
+
+  const [isFinishedModalOpen, setIsFinishedModalOpen] = useState(true);
+  const completionRequestedRef = useRef(false);
+
+  // useEffect(() => {
+  //   if (!course || !session?.token || completionRequestedRef.current) return;
+  //
+  //   const progressValue = Number(course.progress || 0);
+  //   if (progressValue < 100 || course.is_finished) return;
+  //
+  //   completionRequestedRef.current = true;
+  //   const completeCourse = async () => {
+  //     try {
+  //       await CourseService.markCourseComplete(course.id, session.token);
+  //     } catch (error) {
+  //       console.error("Failed to complete course", error);
+  //     } finally {
+  //       setIsFinishedModalOpen(true);
+  //     }
+  //   };
+  //
+  //   completeCourse();
+  // }, [course, session?.token]);
+
 
   return (
     <div className={'w-full h-full flex flex-col px-10 py-5 gap-5'}>

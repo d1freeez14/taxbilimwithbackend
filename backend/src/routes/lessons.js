@@ -6,6 +6,44 @@ const { formatLesson, isValidLessonType } = require('../lib/lessonTypes');
 
 const router = express.Router();
 
+const recalculateCourseProgress = async (lessonId, userId) => {
+  const courseIdQuery = `
+    SELECT m.course_id
+    FROM lessons l
+    JOIN modules m ON l.module_id = m.id
+    WHERE l.id = $1
+  `;
+  const courseResult = await query(courseIdQuery, [lessonId]);
+  if (courseResult.rows.length === 0) {
+    return;
+  }
+
+  const courseId = courseResult.rows[0].course_id;
+  const progressQuery = `
+    SELECT 
+      COUNT(l.id) as total_lessons,
+      COUNT(CASE WHEN lp.completed = true THEN 1 END) as completed_lessons
+    FROM lessons l
+    JOIN modules m ON l.module_id = m.id
+    LEFT JOIN lesson_progress lp ON l.id = lp.lesson_id AND lp.user_id = $2
+    WHERE m.course_id = $1
+  `;
+  const progressResult = await query(progressQuery, [courseId, userId]);
+  const { total_lessons, completed_lessons } = progressResult.rows[0];
+  const totalLessons = parseInt(total_lessons) || 0;
+  const completedLessons = parseInt(completed_lessons) || 0;
+  const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+  const updateEnrollmentQuery = `
+    UPDATE enrollments
+    SET completed_at = CASE WHEN $3 = 100 THEN CURRENT_TIMESTAMP ELSE NULL END
+    WHERE user_id = $2 AND course_id = $1
+  `;
+  await query(updateEnrollmentQuery, [courseId, userId, progressPercentage]);
+
+  return { courseId, progressPercentage, totalLessons, completedLessons };
+};
+
 // Get all lessons
 router.get('/', async (req, res) => {
   try {
@@ -395,10 +433,13 @@ router.post('/:id/complete', auth, async (req, res) => {
     `;
 
     const result = await query(progressQuery, [userId, id]);
+
+    const courseProgress = await recalculateCourseProgress(id, userId);
     
     res.json({ 
       message: 'Lesson marked as completed.',
-      progress: result.rows[0]
+      progress: result.rows[0],
+      courseProgress
     });
   } catch (error) {
     console.error('Error marking lesson as completed:', error);
@@ -421,6 +462,8 @@ router.post('/:id/incomplete', auth, async (req, res) => {
     `;
 
     const result = await query(progressQuery, [userId, id]);
+
+    const courseProgress = await recalculateCourseProgress(id, userId);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Lesson progress not found.' });
@@ -428,7 +471,8 @@ router.post('/:id/incomplete', auth, async (req, res) => {
     
     res.json({ 
       message: 'Lesson marked as incomplete.',
-      progress: result.rows[0]
+      progress: result.rows[0],
+      courseProgress
     });
   } catch (error) {
     console.error('Error marking lesson as incomplete:', error);

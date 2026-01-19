@@ -1,20 +1,25 @@
 'use client'
 import CourseCard from "@/components/CourseCard";
 import {Icon} from "@iconify/react";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import courses from "@/static/courses.json"
 import {useSession} from "@/lib/useSession";
 import {CourseService} from "@/services/course";
-import {useQuery} from "@tanstack/react-query";
+import {keepPreviousData, useQuery} from "@tanstack/react-query";
+import {useDebounce} from "@/lib/useDebounce";
+import Pagination from "@/components/Pagination";
 
+const PAGE_SIZE = 12;
 
 const AllCoursesPage = () => {
   const { session, ready } = useSession();
   const [sortBy, setSortBy] = useState('Популярности');
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 400);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
 
   const sortOptions = [
     'Популярности',
@@ -23,12 +28,38 @@ const AllCoursesPage = () => {
     'Цене: по возрастанию',
     'Цене: по убыванию',
   ];
+  const listTopRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: courses = [], isLoading, error } = useQuery({
-    queryKey: ["courses", session?.token],
-    queryFn: () => CourseService.getAllCourses(session!.token),
-    enabled: !!session?.token,
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedCategory]);
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["courses", session?.token, page, PAGE_SIZE, debouncedSearch, selectedCategory],
+    enabled: !!session?.token && ready,
+    queryFn: () =>
+      CourseService.getAllCourses(session!.token, {
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedSearch.trim() ? debouncedSearch.trim() : undefined,
+        category: selectedCategory,
+      }),
+    placeholderData: keepPreviousData,
   });
+
+  const visibleCourses = useMemo(() => {
+    console.log("FETCHED")
+    const list = data?.courses ?? [];
+    return showFavoritesOnly ? list.filter(c => c.is_favorite) : list;
+  }, [data?.courses, showFavoritesOnly]);
+
+  const pages = data?.pagination?.pages ?? 1;
+
+  useEffect(() => {
+    if (!data) return;
+    if (isFetching) return; // ждём пока закончится fetching
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [page, data, isFetching]);
 
   // const handleFavoriteToggle = (courseId: number, isFavorite: boolean) => {
   //   setCourses(prevCourses =>
@@ -128,17 +159,18 @@ const AllCoursesPage = () => {
           </div>
         </div>
       </div>
+      <div ref={listTopRef} />
       <div className={'flex flex-wrap gap-6'}>
         {isLoading ? (
           <div className="w-full text-center py-10">
             <p className="text-gray-600">Loading courses...</p>
           </div>
-        ) : courses.length === 0 ? (
+        ) : visibleCourses.length === 0 ? (
           <div className="w-full text-center py-10">
             <p className="text-gray-600">No courses found</p>
           </div>
         ) : (
-          courses
+          visibleCourses
             .filter(course => {
               const matchesSearch =
                 course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -159,6 +191,18 @@ const AllCoursesPage = () => {
                 key={course.id}
               />
             ))
+        )}
+      </div>
+      {/* Footer: pagination + fetching indicator */}
+      <div className="w-full flex items-center justify-between">
+        <Pagination
+          page={page}
+          pages={pages}
+          onPageChange={setPage}
+          disabled={isFetching}
+        />
+        {isFetching && (
+          <p className="text-[12px] text-gray-500">Updating...</p>
         )}
       </div>
     </div>

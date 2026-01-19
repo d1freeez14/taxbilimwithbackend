@@ -51,7 +51,7 @@ const CourseCard = ({bg = 'white', isFavourite = false, isInCoursesPage = false,
   };
 
   return (
-    <Link href={`/dashboard/courses/${course.id}`} className={'flex flex-col p-5 rounded-[1rem] gap-6 items-center'} style={{backgroundColor: bg}}>
+    <Link href={`/dashboard/courses/${course.id}`} className={'flex flex-col p-5 rounded-[1rem] gap-6 items-center border border-[#E5E7EA]'} style={{backgroundColor: bg}}>
       <div className="relative w-full aspect-video rounded-[0.5rem] overflow-hidden">
         <Image
           src={course.image_src} alt="" fill className={"object-cover"}/>

@@ -66,12 +66,12 @@ const TeacherCoursesPage = () => {
 
   const queryClient = useQueryClient();
 
-  const { mutate: togglePublish, isPending: toggling } = useMutation({
-    mutationFn: ({ id, isPublished }: { id: number; isPublished: boolean }) =>
+  const {mutate: togglePublish, isPending: toggling} = useMutation({
+    mutationFn: ({id, isPublished}: { id: number; isPublished: boolean }) =>
       CourseService.updateCoursePublishStatus(id, isPublished, session!.token),
     onSuccess: async () => {
-      toast.success("Статус публикации обновлён");
-      await queryClient.invalidateQueries({ queryKey: ["my-teacher-courses"] });
+      toast.success("Статус курса обновлён");
+      await queryClient.invalidateQueries({queryKey: ["my-teacher-courses"]});
     },
     onError: (err: any) => {
       toast.error(err?.message || "Ошибка обновления статуса");
@@ -173,9 +173,11 @@ const TeacherCoursesPage = () => {
                       className="rounded-full object-cover"
                     />
                     <div className={'flex flex-col gap-1'}>
-                      <p className={'text-[16px] font-semibold'}>
-                        {course.title}
-                      </p>
+                      <Link href={`/teacher/courses/review/${course.id}`}>
+                        <p className={'text-[16px] font-semibold'}>
+                          {course.title}
+                        </p>
+                      </Link>
                       <p className={'text-[#4B5563] text-[12px]'}>2h 32min</p>
                     </div>
                   </div>
@@ -213,9 +215,9 @@ const TeacherCoursesPage = () => {
                     }
                   >
                     {course.is_published ? (
-                      <Icon icon="mdi:eye-outline" className="w-5 h-5 text-[#4B5563]" />
+                      <Icon icon="mdi:eye-outline" className="w-5 h-5 text-[#4B5563]"/>
                     ) : (
-                      <Icon icon="mdi:eye-off-outline" className="w-5 h-5 text-[#4B5563]" />
+                      <Icon icon="mdi:eye-off-outline" className="w-5 h-5 text-[#4B5563]"/>
                     )}
                   </button>
                   <Link href={`/teacher/courses/${course.id}`} className={'p-2'}>
