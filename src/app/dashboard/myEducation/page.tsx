@@ -81,7 +81,7 @@ const MyEducation = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 md:gap-3 lg:gap-6 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 md:gap-3 lg:gap-6 w-full items-start">
           {filteredEnrollments?.map((enrollment) => (
             <MyCourseCard
               key={enrollment.id}

@@ -81,6 +81,11 @@ module.exports = withUt({
           243px 204px 127px 0px #00000003,
           380px 319px 139px 0px #00000000
         `,
+        'border': `
+          0px 1px 1px 0px #0000001F,
+          0px 0px 0px 1px #676E7629,
+          0px 2px 5px 0px #676E7614
+        `,
       },
       backgroundImage: {
         'gradient-tb': 'linear-gradient(to left, #F05035, #F2C117)',

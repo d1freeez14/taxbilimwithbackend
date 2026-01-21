@@ -1,6 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import {useMemo, useState} from 'react';
+import {Enrollment} from "@/types/course";
+import {useSession} from "@/lib/useSession";
+import {useMutation} from "@tanstack/react-query";
+import {ReviewsService} from "@/services/reviews";
+import toast from "react-hot-toast";
 
 type ReviewModalProps = {
   isOpen: boolean;
@@ -9,6 +14,7 @@ type ReviewModalProps = {
   initialRating?: number;
   initialText?: string;
   loading?: boolean;
+  enrollment: Enrollment
 };
 
 const Star = ({
@@ -60,22 +66,58 @@ const ReviewModal = ({
                        initialRating = 0,
                        initialText = '',
                        loading = false,
+                       enrollment,
                      }: ReviewModalProps) => {
+  const {session} = useSession();
+
   const [rating, setRating] = useState<number>(initialRating);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [text, setText] = useState<string>(initialText);
 
   const shownRating = hoverRating || rating;
 
-  const canSend = useMemo(() => rating > 0 && text.trim().length > 0 && !loading, [rating, text, loading]);
+  const {mutate: createReview, isPending} = useMutation({
+    mutationFn: async () => {
+      if (!session?.token) throw new Error('No token');
+      if (!enrollment?.course_id) throw new Error('No course_id in enrollment');
+      console.log("TOKEN", session.token);
+      return ReviewsService.createReview(
+        {
+          courseId: Number(enrollment.course_id),
+          rating,
+          comment: text.trim(),
+        },
+        session.token
+      );
+    },
+    onSuccess: async (data) => {
 
-  if (!isOpen) return null;
+      setHoverRating(0);
+      setRating(0);
+      setText('');
+      toast.success("Отзыв успешно отправлен");
+      onClose();
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error(
+        err?.response?.data?.message ||
+        "Не удалось отправить отзыв. Попробуйте позже."
+      );
+    },
+  });
+  const canSend = useMemo(
+    () => rating > 0 && text.trim().length > 0 && !loading && !isPending,
+    [rating, text, loading, isPending]
+  );
 
   const submit = () => {
     if (!canSend) return;
-    onSubmit?.({ rating, text: text.trim() });
+    createReview();
   };
 
+  if (!isOpen) return null;
+  console.log('enrollment', enrollment)
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
@@ -89,15 +131,28 @@ const ReviewModal = ({
           className="self-end text-[#EE7A67] text-xl leading-none"
           aria-label="Close"
           type="button"
+          disabled={isPending}
         >
           ✕
         </button>
 
         {/* Title + subtitle */}
-        <h2 className="text-[24px] leading-6 font-semibold text-black text-center">Желаете оставить отзыв?</h2>
+        <h2 className="text-[24px] leading-6 font-semibold text-black text-center">
+          Желаете оставить отзыв?
+        </h2>
         <p className="text-[14px] text-[#383F45] text-center">
           Ваш отзыв поможет нам делать наши продукты еще лучше
         </p>
+
+        {/* Course info (from enrollment) */}
+        <div className="mt-4 rounded-xl bg-[#F7F7F7] p-3">
+          <p className="text-[13px] text-[#454C52]">
+            Курс: <span className="font-semibold text-black">{enrollment?.course_title}</span>
+          </p>
+          <p className="text-[13px] text-[#454C52]">
+            Автор: <span className="font-semibold text-black">{enrollment?.author_name}</span>
+          </p>
+        </div>
 
         {/* Rating */}
         <div className="mt-6 text-left">
@@ -125,6 +180,7 @@ const ReviewModal = ({
             onChange={(e) => setText(e.target.value)}
             placeholder="Мне понравился курс..."
             className="mt-2 h-[140px] w-full resize-none rounded-xl border border-[#E7E7E7] bg-white p-3 text-[14px] outline-none focus:border-[#EE7A67]"
+            disabled={isPending}
           />
         </div>
 
@@ -133,7 +189,8 @@ const ReviewModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 flex-1 rounded-xl border border-[#E7E7E7] bg-white text-[13px] font-medium text-[#333] hover:bg-[#F7F7F7]"
+            disabled={isPending}
+            className="h-10 flex-1 rounded-xl border border-[#E7E7E7] bg-white text-[13px] font-medium text-[#333] hover:bg-[#F7F7F7] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Вернуться назад
           </button>
@@ -144,7 +201,7 @@ const ReviewModal = ({
             disabled={!canSend}
             className="h-10 flex-1 rounded-xl bg-[#EE7A67] text-[13px] font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95"
           >
-            {loading ? 'Отправка...' : 'Отправить отзыв'}
+            {isPending ? 'Отправка...' : 'Отправить отзыв'}
           </button>
         </div>
       </div>

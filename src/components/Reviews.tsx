@@ -6,9 +6,10 @@ import {CourseReviews} from "@/types/course";
 interface ReviewsProps {
   reviews?: CourseReviews;
   reviews_count?: string; // optional, we’ll prefer reviews.statistics.total
+  courseId?: number;
 }
 
-const Reviews = ({ reviews, reviews_count }: ReviewsProps) => {
+const Reviews = ({ reviews, reviews_count, courseId }: ReviewsProps) => {
   const { statistics, recent_reviews } = reviews || {};
   const total = statistics?.total ?? 0;
   const average = statistics?.average ?? 0;

@@ -142,7 +142,7 @@ app.use('/api/modules', authMiddleware.auth, moduleRoutes);
 app.use('/api/lessons', authMiddleware.auth, lessonRoutes);
 app.use('/api/users', authMiddleware.auth, userRoutes);
 app.use('/api/enrollments', authMiddleware.auth, enrollmentRoutes);
-app.use('/api/reviews', reviewRoutes);
+app.use('/api/reviews', authMiddleware.auth, reviewRoutes);
 app.use('/api/favorites', authMiddleware.auth, favoriteRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/progress', authMiddleware.auth, progressRoutes);

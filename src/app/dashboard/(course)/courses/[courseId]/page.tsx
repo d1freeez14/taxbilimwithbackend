@@ -143,32 +143,32 @@ const CoursePageById = () => {
               <div className={'flex flex-col gap-1.5'}>
                 <h3 className={'text-black text-[24px] font-semibold'}>{course.author_name}</h3>
                 <p className={'text-[#676E76] text-[14px] font-medium'}>{course.author_bio}</p>
-                <div className={'flex items-center gap-2'}>
-                  <div className={'flex items-center gap-1'}>
-                    <Icon icon={'solar:star-bold'} className={'text-[#FBBC55] w-[18px] h-[18px]'}/>
-                    <p className={'text-[14px] text-[#676E76] font-medium'}>4.8 рейтинг (46)</p>
-                  </div>
-                  <div className={'flex items-center gap-1'}>
-                    <Icon icon={'mdi:users-group-outline'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
-                    <p className={'text-[14px] text-[#676E76] font-medium'}>2 089 студентов</p>
-                  </div>
-                  <div className={'flex items-center gap-1'}>
-                    <Icon icon={'fa-solid:tasks'} className={'text-[#676E76] w-[18px] h-[18px]'}/>
-                    <p className={'text-[14px] text-[#676E76] font-medium'}>7 статей</p>
-                  </div>
-                </div>
+                {/*<div className={'flex items-center gap-2'}>*/}
+                {/*  <div className={'flex items-center gap-1'}>*/}
+                {/*    <Icon icon={'solar:star-bold'} className={'text-[#FBBC55] w-[18px] h-[18px]'}/>*/}
+                {/*    <p className={'text-[14px] text-[#676E76] font-medium'}>4.8 рейтинг (46)</p>*/}
+                {/*  </div>*/}
+                {/*  <div className={'flex items-center gap-1'}>*/}
+                {/*    <Icon icon={'mdi:users-group-outline'} className={'text-[#676E76] w-[18px] h-[18px]'}/>*/}
+                {/*    <p className={'text-[14px] text-[#676E76] font-medium'}>2 089 студентов</p>*/}
+                {/*  </div>*/}
+                {/*  <div className={'flex items-center gap-1'}>*/}
+                {/*    <Icon icon={'fa-solid:tasks'} className={'text-[#676E76] w-[18px] h-[18px]'}/>*/}
+                {/*    <p className={'text-[14px] text-[#676E76] font-medium'}>7 статей</p>*/}
+                {/*  </div>*/}
+                {/*</div>*/}
               </div>
             </div>
-            <p className={'text-black text-[14px]'}>
-              Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum
-              integer in. Nisl eu dui facilisi sit tristique pretium in. Metus lectus semper odio sit consectetur nibh.
-              Non ac euismod nunc quam etiam. Nam massa cursus non quam turpis molestie sed sem.
-              Sed magna in orci amet vulputate integer pharetra ipsum cum. Consectetur vivamus pellentesque aliquet
-              nulla maecenas donec arcu eu ut. Fames dictum cum nullam adipiscing eget...Подробнее
-            </p>
+            {/*<p className={'text-black text-[14px]'}>*/}
+            {/*  Lorem ipsum dolor sit amet consectetur. Convallis pulvinar mattis integer tincidunt integer bibendum*/}
+            {/*  integer in. Nisl eu dui facilisi sit tristique pretium in. Metus lectus semper odio sit consectetur nibh.*/}
+            {/*  Non ac euismod nunc quam etiam. Nam massa cursus non quam turpis molestie sed sem.*/}
+            {/*  Sed magna in orci amet vulputate integer pharetra ipsum cum. Consectetur vivamus pellentesque aliquet*/}
+            {/*  nulla maecenas donec arcu eu ut. Fames dictum cum nullam adipiscing eget...Подробнее*/}
+            {/*</p>*/}
           </div>
           <hr className={'border-t border-[#E5E7EA]'}/>
-          <Reviews reviews={course?.reviews} reviews_count={course?.review_count.toString()}/>
+          <Reviews reviews={course?.reviews} reviews_count={course?.review_count.toString()} courseId={course.id}/>
         </div>
 
         {/*RIGHT SECTION*/}
